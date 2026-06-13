@@ -1,122 +1,113 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
-import './App.css'
+import React, { useState } from 'react';
+import { PipelineRail } from './components/PipelineRail';
+import { InspectorPanel } from './components/InspectorPanel';
+import { useRunEvents } from './hooks/useRunEvents';
 
-function App() {
-  const [count, setCount] = useState(0)
+const App: React.FC = () => {
+  const [activeTab, setActiveTab] = useState('plan');
+  const [runId, setRunId] = useState<string | null>(null);
+  const [query, setQuery] = useState('');
+
+  const { stageStatus, progress, currentStage } = useRunEvents(runId);
+
+  const tabs = [
+    { id: 'plan', label: 'Plan' },
+    { id: 'drafts', label: 'Drafts' },
+    { id: 'debate', label: 'Debate' },
+    { id: 'synthesis', label: 'Synthesis' },
+    { id: 'final', label: 'Final Report' },
+  ];
+
+  const startRun = async () => {
+    if (!query) return;
+    
+    try {
+      const response = await fetch('http://localhost:3001/api/runs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+      });
+      const data = await response.json();
+      setRunId(data.runId);
+    } catch (error) {
+      console.error('Failed to start run:', error);
+    }
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="flex h-screen w-screen bg-bg-base overflow-hidden">
+      {/* Sidebar / Pipeline Rail */}
+      <PipelineRail stageStatus={stageStatus} />
 
-      <div className="ticks"></div>
+      {/* Main Content Area */}
+      <main className="flex-1 flex flex-col min-w-0">
+        {/* Header / Tabs */}
+        <header className="border-b border-border-default bg-bg-panel px-6 pt-6">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-xl font-bold tracking-tighter text-text-primary">
+              search-goat <span className="text-accent">/</span> research-run
+            </h1>
+            <div className="font-mono-accent text-text-muted">
+              {runId ? `ID: ${runId}` : 'No active run'}
+            </div>
+          </div>
+          
+          <nav className="flex space-x-0">
+            {tabs.map((tab) => (
+              <button
+                key={tab.id}
+                onClick={() => setActiveTab(tab.id)}
+                className={`px-6 py-3 text-sm font-mono-accent border-t border-l border-r border-transparent -mb-[1px] ${
+                  activeTab === tab.id
+                    ? 'border-border-default bg-bg-base text-accent border-b-2 border-b-accent'
+                    : 'text-text-secondary hover:text-text-primary'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </nav>
+        </header>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
+        {/* Dynamic Content */}
+        <div className="flex-1 overflow-y-auto p-10">
+          {!runId ? (
+            <div className="max-w-2xl mx-auto mt-20 p-8 border border-border-default bg-bg-panel">
+              <h2 className="text-lg font-bold mb-4 font-mono-accent">Start New Research</h2>
+              <div className="flex space-x-4">
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Enter research query..."
+                  className="flex-1 bg-bg-base border border-border-default p-3 text-text-primary focus:outline-none focus:border-accent font-sans"
+                  onKeyDown={(e) => e.key === 'Enter' && startRun()}
+                />
+                <button
+                  onClick={startRun}
+                  className="bg-accent text-bg-base font-bold px-6 py-2 uppercase tracking-tighter hover:opacity-90"
+                >
+                  Run
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="max-w-4xl mx-auto h-full flex flex-col">
+              <div className="mb-8 p-4 border border-accent/20 bg-accent/5 font-mono text-xs text-accent">
+                {currentStage ? `[${currentStage.toUpperCase()}]` : 'INITIALIZING...'} {progress}% Complete
+              </div>
+              <div className="flex-1 border border-dashed border-border-strong flex items-center justify-center text-text-muted font-mono-accent uppercase tracking-widest">
+                Content area for: {activeTab}
+              </div>
+            </div>
+          )}
         </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
+      </main>
 
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
-}
+      {/* Right Rail / Inspector */}
+      <InspectorPanel />
+    </div>
+  );
+};
 
-export default App
+export default App;
