@@ -1,0 +1,65 @@
+{
+  "query": "hr services for IT services in pune",
+  "approaches": [
+    {
+      "id": "A",
+      "name": "Quantitative Market Analysis",
+      "methodology": "This approach involves collecting and analyzing data from various sources to identify trends and statistics related to HR services for IT companies in Pune. It will utilize online databases, market research reports, and industry surveys to gather information.",
+      "source_types": [
+        "Academic",
+        "Market Research",
+        "Government Reports"
+      ],
+      "sub_questions": [
+        "What is the current market size of HR services for IT companies in Pune?",
+        "What are the most common HR services required by IT companies in Pune?",
+        "What is the average cost of HR services for IT companies in Pune?"
+      ],
+      "seed_queries": [
+        "HR services market size in Pune",
+        "IT companies in Pune HR requirements",
+        "Cost of HR services for IT companies in Pune"
+      ]
+    },
+    {
+      "id": "B",
+      "name": "Expert Opinion and Case Studies",
+      "methodology": "This approach involves gathering insights from experts and case studies to understand the HR services required by IT companies in Pune. It will utilize interviews, articles, and blog posts from industry experts and thought leaders to gather information.",
+      "source_types": [
+        "Forums",
+        "Blogs",
+        "News"
+      ],
+      "sub_questions": [
+        "What are the most common HR challenges faced by IT companies in Pune?",
+        "How do IT companies in Pune currently handle their HR services?",
+        "What are the benefits of outsourcing HR services for IT companies in Pune?"
+      ],
+      "seed_queries": [
+        "HR challenges in IT companies in Pune",
+        "IT companies in Pune HR outsourcing",
+        "Benefits of HR services for IT companies in Pune"
+      ]
+    },
+    {
+      "id": "C",
+      "name": "Historical Context and Competitive Landscape",
+      "methodology": "This approach involves analyzing the historical context and competitive landscape of HR services for IT companies in Pune. It will utilize news articles, company profiles, and industry reports to gather information.",
+      "source_types": [
+        "News",
+        "Company Websites",
+        "Industry Reports"
+      ],
+      "sub_questions": [
+        "How has the HR services market for IT companies in Pune evolved over the years?",
+        "Who are the key players in the HR services market for IT companies in Pune?",
+        "What are the emerging trends and innovations in HR services for IT companies in Pune?"
+      ],
+      "seed_queries": [
+        "History of HR services in Pune",
+        "HR services companies in Pune",
+        "Emerging trends in HR services for IT companies in Pune"
+      ]
+    }
+  ]
+}

@@ -2,6 +2,11 @@ import { RunStore, RunMetadata } from './runStore.js';
 import { EventEmitter } from 'events';
 import { PlannerAgent, PlanOutput } from '../agents/planner.js';
 import { ResearcherAgent } from '../agents/researcher.js';
+import { FactCheckerAgent } from '../agents/factChecker.js';
+import { DebaterAgent } from '../agents/debater.js';
+import { SynthesizerAgent } from '../agents/synthesizer.js';
+import { FinalFactCheckerAgent } from '../agents/finalFactChecker.js';
+import { ReportFinalizer } from '../agents/finalizer.js';
 
 export type PipelineStage = 
   | 'planning' 
@@ -99,6 +104,32 @@ export class PipelineOrchestrator extends EventEmitter {
         await Promise.all(plan.approaches.map(approach => 
           ResearcherAgent.run(runId, approach)
         ));
+        break;
+
+      case 'fact_checking':
+        const factPlan = await RunStore.readArtifact<PlanOutput>(runId, 'plan.json');
+        if (!factPlan) throw new Error(`Plan not found for run ${runId}`);
+
+        // Run all 3 fact-checkers in parallel
+        await Promise.all(factPlan.approaches.map(approach => 
+          FactCheckerAgent.run(runId, approach.id)
+        ));
+        break;
+
+      case 'debating':
+        await DebaterAgent.run(runId);
+        break;
+
+      case 'synthesizing':
+        await SynthesizerAgent.run(runId);
+        break;
+
+      case 'final_fact_check':
+        await FinalFactCheckerAgent.run(runId);
+        break;
+
+      case 'finalizing':
+        await ReportFinalizer.run(runId);
         break;
 
       default:

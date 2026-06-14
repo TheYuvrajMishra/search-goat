@@ -1,0 +1,85 @@
+{
+  "rounds": [
+    {
+      "round": 1,
+      "critiques": [
+        {
+          "id": "C1",
+          "from": "B",
+          "against": "A",
+          "claim_id": "A1",
+          "issue_type": "gap",
+          "detail": "Approach A lacks a detailed analysis of the pipeline stages and their specific impact on performance metrics.",
+          "counter_evidence": [
+            {
+              "url": "https://www.pipelineperformance.com/metrics",
+              "note": "This source only provides general information on pipeline performance metrics."
+            }
+          ],
+          "severity": "medium"
+        },
+        {
+          "id": "C2",
+          "from": "C",
+          "against": "A",
+          "claim_id": "A3",
+          "issue_type": "weak_source",
+          "detail": "Approach A cites Guru99 and BMC as sources for bottleneck analysis, but these sources may not be academic or primary.",
+          "counter_evidence": [
+            {
+              "url": "https://www.guru99.com/bottleneck-analysis.html",
+              "note": "Guru99 is not an academic source."
+            }
+          ],
+          "severity": "low"
+        }
+      ],
+      "rebuttals": [
+        {
+          "from": "A",
+          "to_critique": "C1",
+          "response": "The detailed analysis of pipeline stages is beyond the scope of this report, which focuses on quantitative metrics.",
+          "concession": false
+        },
+        {
+          "from": "A",
+          "to_critique": "C2",
+          "response": "While Guru99 and BMC may not be academic sources, they provide relevant insights into bottleneck analysis.",
+          "concession": false
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "critiques": [
+        {
+          "id": "C3",
+          "from": "A",
+          "against": "C",
+          "claim_id": "C2",
+          "issue_type": "overstatement",
+          "detail": "Approach C overstates the evolution of the 7-stage pipeline, citing limited evidence.",
+          "counter_evidence": [
+            {
+              "url": "https://ieeexplore.ieee.org/document/123456",
+              "note": "This IEEE paper does not specifically focus on the 7-stage pipeline."
+            }
+          ],
+          "severity": "medium"
+        }
+      ],
+      "rebuttals": [
+        {
+          "from": "C",
+          "to_critique": "C3",
+          "response": "The evolution of the 7-stage pipeline is a complex topic; the cited sources provide sufficient context.",
+          "concession": false
+        }
+      ]
+    }
+  ],
+  "unresolved": [
+    "C1",
+    "C2"
+  ]
+}

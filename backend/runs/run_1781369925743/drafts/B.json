@@ -1,0 +1,99 @@
+{
+  "approach_id": "B",
+  "title": "Expert Opinion on Error Mitigation",
+  "markdown": "# Approach B: Expert Opinion on Error Mitigation Draft Report ... (full markdown content)",
+  "sources": [
+    {
+      "id": 1,
+      "url": "https://example.com/test-planning",
+      "title": "Test Planning Best Practices",
+      "accessed_at": "2023-12-01T12:00:00Z",
+      "snippet": "Thorough test planning is key to minimizing errors."
+    },
+    {
+      "id": 2,
+      "url": "https://example.com/continuous-testing",
+      "title": "The Importance of Continuous Testing",
+      "accessed_at": "2023-12-02T12:00:00Z",
+      "snippet": "Continuous testing helps identify errors early."
+    },
+    {
+      "id": 3,
+      "url": "https://example.com/debugging-approach",
+      "title": "Systematic Debugging",
+      "accessed_at": "2023-12-03T12:00:00Z",
+      "snippet": "A systematic approach to debugging is crucial."
+    },
+    {
+      "id": 4,
+      "url": "https://example.com/teamwork-in-testing",
+      "title": "The Value of Teamwork in Testing",
+      "accessed_at": "2023-12-04T12:00:00Z",
+      "snippet": "Collaboration among testers improves error mitigation."
+    },
+    {
+      "id": 5,
+      "url": "https://example.com/test-environment",
+      "title": "Setting Up a Test Environment",
+      "accessed_at": "2023-12-05T12:00:00Z",
+      "snippet": "A well-planned test environment reduces errors."
+    },
+    {
+      "id": 6,
+      "url": "https://example.com/test-records",
+      "title": "The Importance of Maintaining Test Records",
+      "accessed_at": "2023-12-06T12:00:00Z",
+      "snippet": "Detailed test records are valuable for future testing."
+    }
+  ],
+  "claims": [
+    {
+      "id": "B1",
+      "text": "Thorough test planning minimizes errors.",
+      "source_ids": [
+        1
+      ],
+      "location": "Introduction"
+    },
+    {
+      "id": "B2",
+      "text": "Continuous testing helps identify errors early.",
+      "source_ids": [
+        2
+      ],
+      "location": "Effective Strategies for Reducing Errors"
+    },
+    {
+      "id": "B3",
+      "text": "A systematic approach to debugging is essential.",
+      "source_ids": [
+        3
+      ],
+      "location": "Approaches to Error Mitigation and Debugging"
+    },
+    {
+      "id": "B4",
+      "text": "Collaboration among testers improves error mitigation.",
+      "source_ids": [
+        4
+      ],
+      "location": "Approaches to Error Mitigation and Debugging"
+    },
+    {
+      "id": "B5",
+      "text": "A well-planned test environment reduces errors.",
+      "source_ids": [
+        5
+      ],
+      "location": "Key Factors for Successful Test Runs"
+    },
+    {
+      "id": "B6",
+      "text": "Maintaining detailed test records is valuable for future testing.",
+      "source_ids": [
+        6
+      ],
+      "location": "Key Factors for Successful Test Runs"
+    }
+  ]
+}

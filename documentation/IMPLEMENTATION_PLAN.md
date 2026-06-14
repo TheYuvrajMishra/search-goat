@@ -64,22 +64,22 @@ This document tracks the progress of the search-goat implementation, divided int
 **Goal:** Implement factual verification of claims and adversarial critique between research strategies.
 
 ### Checklist
-- [ ] **B3.1: Fact-Checker Agent**
-  - [ ] Implement atomic claim extraction from drafts.
-  - [ ] Build independent verification logic using Playwright to check extracted claims.
-  - [ ] Assign verdicts (Verified, Contradicted, etc.) and confidence scores.
-- [ ] **B3.2: Embeddings Integration**
-  - [ ] Implement source deduplication and claim clustering across the 3 approaches.
-- [ ] **B3.3: Debater Agent**
-  - [ ] Implement the debate protocol: cross-critique and rebuttal rounds.
-  - [ ] Generate a structured `DebateTranscript` highlighting contradictions and gaps.
-- [ ] **F3.1: Verification UI**
-  - [ ] Build `FactCheckTable` with interactive verdict badges.
-  - [ ] Implement the `DebateThread` viewer for visualizing agent arguments.
+- [x] **B3.1: Fact-Checker Agent**
+  - [x] Implement atomic claim extraction from drafts (handled by Researcher).
+  - [x] Build independent verification logic using Playwright to check extracted claims.
+  - [x] Assign verdicts (Verified, Contradicted, etc.) and confidence scores.
+- [x] **B3.2: Embeddings Integration**
+  - [x] Implement source deduplication and claim clustering across the 3 approaches.
+- [x] **B3.3: Debater Agent**
+  - [x] Implement the debate protocol: cross-critique and rebuttal rounds.
+  - [x] Generate a structured `DebateTranscript` highlighting contradictions and gaps.
+- [x] **F3.1: Verification UI**
+  - [x] Build `FactCheckTable` with interactive verdict badges.
+  - [x] Implement the `DebateThread` viewer for visualizing agent arguments.
 
 ### Phase 3 Observations & Rework
 *(To be filled after each task or phase testing)*
-- **Observation:** [Pending]
+- **Observation:** Phase 3 complete. Fact-checker now verifies claims in parallel. Debater facilitates cross-approach critique. Frontend components for fact-check results and debate transcripts are implemented.
 - **Rework Needed:** [None]
 
 ---
@@ -88,20 +88,20 @@ This document tracks the progress of the search-goat implementation, divided int
 **Goal:** Consolidate all findings into a high-fidelity final report and polish the user experience.
 
 ### Checklist
-- [ ] **B4.1: Synthesizer Agent**
-  - [ ] Implement logic to merge 3 drafts, resolving conflicts identified in the debate.
-  - [ ] Ensure "Disagreements & Open Questions" are explicitly preserved if unresolved.
-- [ ] **B4.2: Final Fact-Checker**
-  - [ ] Run a final end-to-end verification pass on the synthesized report.
-- [ ] **B4.3: Report Finalizer**
-  - [ ] Assembly of the final Markdown deliverable with renumbered citations and full bibliography.
-- [ ] **F4.1: Final Report & Registry Editor**
-  - [ ] Build the high-fidelity `FinalReportView`.
-  - [ ] Implement the `RegistryEditor` (FR-36) for live prompt/skill management.
-- [ ] **E2E: Full System Integration Test**
-  - [ ] Conduct end-to-end research runs with complex queries to verify pipeline stability and output quality.
+- [x] **B4.1: Synthesizer Agent**
+  - [x] Implement logic to merge 3 drafts, resolving conflicts identified in the debate.
+  - [x] Ensure "Disagreements & Open Questions" are explicitly preserved if unresolved.
+- [x] **B4.2: Final Fact-Checker**
+  - [x] Run a final end-to-end verification pass on the synthesized report.
+- [x] **B4.3: Report Finalizer**
+  - [x] Assembly of the final Markdown deliverable with renumbered citations and full bibliography.
+- [x] **F4.1: Final Report & Registry Editor**
+  - [x] Build the high-fidelity `FinalReportView`.
+  - [x] Implement the `RegistryEditor` (FR-36) for live prompt/skill management.
+- [x] **E2E: Full System Integration Test**
+  - [x] Conduct end-to-end research runs with complex queries to verify pipeline stability and output quality.
 
 ### Phase 4 Observations & Rework
 *(To be filled after each task or phase testing)*
-- **Observation:** [Pending]
+- **Observation:** Phase 4 implementation complete. The synthesis engine now merges drafts and incorporates debate resolutions. Final fact-check and report assembly are functional.
 - **Rework Needed:** [None]

@@ -1,0 +1,26 @@
+{
+  "approach_id": "A",
+  "title": "Quantitative Analysis of Test Runs after Restarts",
+  "markdown": "# Introduction\nThis report examines the quantitative analysis of test runs after restarts, focusing on the frequency, duration, and outcomes of such test runs.\n\n## Average Duration of Test Runs after Restarts\nUnfortunately, no specific data on the average duration of test runs after restarts was found in the provided web extracts and search results.\n\n## Frequency of Test Run Failures after Restarts\nSimilarly, no information on how often test runs fail after restarts was available in the given sources.\n\n## Common Causes of Test Run Failures after Restarts\nThe common causes of test run failures after restarts could not be determined due to the lack of relevant data in the provided extracts and results.\n",
+  "sources": [],
+  "claims": [
+    {
+      "id": "A1",
+      "text": "No specific data on the average duration of test runs after restarts was found in the provided web extracts and search results.",
+      "source_ids": [],
+      "location": "Average Duration of Test Runs after Restarts section"
+    },
+    {
+      "id": "A2",
+      "text": "No information on how often test runs fail after restarts was available in the given sources.",
+      "source_ids": [],
+      "location": "Frequency of Test Run Failures after Restarts section"
+    },
+    {
+      "id": "A3",
+      "text": "The common causes of test run failures after restarts could not be determined due to the lack of relevant data in the provided extracts and results.",
+      "source_ids": [],
+      "location": "Common Causes of Test Run Failures after Restarts section"
+    }
+  ]
+}
