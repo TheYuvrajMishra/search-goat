@@ -64,21 +64,27 @@ const ChatPage: React.FC = () => {
     <div className="relative min-h-[100dvh] bg-[#050505] text-white flex flex-col font-sans selection:bg-emerald-500/30">
       <EtherealBackground />
       
-      {/* Fixed Header */}
-      <header className="fixed top-0 left-0 right-0 z-40 px-6 py-4 backdrop-blur-md bg-black/20 border-b border-white/5">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-emerald-500 to-purple-500 animate-pulse" />
-            <h1 className="text-xl font-medium tracking-tight">Vanguard <span className="text-white/40">Aggregator</span></h1>
-          </div>
-          <div className="px-3 py-1 rounded-full bg-white/[0.03] ring-1 ring-white/10 text-[10px] uppercase tracking-[0.2em] font-medium text-white/30">
-            v1.0.4 Online
-          </div>
-        </div>
-      </header>
-
       {/* Main Message Area */}
-      <main className="flex-1 w-full max-w-4xl mx-auto px-6 pt-24 pb-40">
+      <main className="flex-1 w-full max-w-4xl mx-auto px-6 pt-12 pb-40">
+        {/* App Hero Branding */}
+        <div className="flex flex-col items-center mb-16 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: -20, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 1.5, ease: [0.32, 0.72, 0, 1] }}
+          >
+            <div className="w-12 h-12 rounded-full bg-gradient-to-tr from-emerald-500/20 to-purple-500/20 border border-white/10 flex items-center justify-center mb-6 mx-auto">
+              <div className="w-3 h-3 rounded-full bg-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.5)]" />
+            </div>
+            <h1 className="text-4xl md:text-5xl font-serif font-light tracking-tight text-white mb-4">
+              Search <span className="text-white/30 italic">Goat</span>
+            </h1>
+            <p className="text-[11px] uppercase tracking-[0.4em] text-white/20 font-medium">
+              Intelligence Aggregator
+            </p>
+          </motion.div>
+        </div>
+
         <div className="space-y-12">
           <AnimatePresence initial={false}>
             {messages.map((msg, index) => (
