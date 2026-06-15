@@ -3,11 +3,85 @@ const duckduckgoService = require('../services/duckduckgoService');
 const llmService = require('../services/llmService');
 const keywordService = require('../services/keywordService');
 const similarSearchService = require('../services/similarSearchService');
+const rankingService = require('../services/rankingService');
 
 class SearchController {
   /**
-   * Main handler for searches. Defaulting to DuckDuckGo as the primary engine,
-   * but allowing Google if specified. Supports AI summaries by default and optimized keywords.
+   * Dedicated handler for top 10 best and most relevant search results.
+   * Uses similar search for a wide pool and then LLM-based ranking/filtering.
+   */
+  async handleTopResults(req, res) {
+    const startTime = Date.now();
+    const query = req.query.q || req.query.query || req.params.query;
+    const engine = (req.query.engine || 'duckduckgo').toLowerCase();
+
+    if (!query) {
+      return res.status(400).json({
+        success: false,
+        error: 'Query parameter "q" or "query" (or route parameter) is required.'
+      });
+    }
+
+    try {
+      // 1. Fetch a broad set of results using Similar Search
+      console.log(`Fetching broad result pool for ranking: "${query}"...`);
+      const { similarQueries, results } = await similarSearchService.searchSimilar(query, engine);
+
+      // 2. Rank and filter results using the LLM Ranking Service
+      const rankedResults = await rankingService.rankResults(query, results);
+
+      // 3. Extract domains and map ranks for the final top 10
+      const formattedResults = rankedResults.map((item, index) => {
+        let domain = '';
+        try {
+          domain = new URL(item.url).hostname;
+        } catch (e) {
+          // Ignore invalid URL formatting
+        }
+
+        return {
+          relevanceRank: index + 1,
+          title: item.title,
+          url: item.url,
+          domain: domain,
+          favicon: domain ? `https://www.google.com/s2/favicons?sz=64&domain=${domain}` : '',
+          snippet: item.snippet,
+          matchedQuery: item.matchedQuery,
+          source: engine === 'ddg' ? 'duckduckgo' : engine
+        };
+      });
+
+      const timeTakenMs = Date.now() - startTime;
+
+      return res.status(200).json({
+        success: true,
+        meta: {
+          query,
+          engine: engine === 'ddg' ? 'duckduckgo' : engine,
+          poolSize: results.length,
+          similarQueriesUsed: similarQueries,
+          totalResults: formattedResults.length,
+          timeTakenMs,
+          timestamp: new Date().toISOString()
+        },
+        results: formattedResults
+      });
+    } catch (error) {
+      console.error('Top results controller error:', error);
+      const isRateLimit = error.message.includes('429') || error.message.includes('CAPTCHA');
+      const statusCode = isRateLimit ? 429 : 500;
+      
+      return res.status(statusCode).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
+
+  /**
+   * Main handler for searches. Defaulting to a comprehensive "Similar Search" 
+   * which executes 5 parallel queries. Also defaults to generating keywords 
+   * and an AI summary.
    */
   async handleSearch(req, res) {
     const startTime = Date.now();
@@ -18,9 +92,12 @@ class SearchController {
     // Default engine is 'duckduckgo' (primary)
     const engine = (req.query.engine || 'duckduckgo').toLowerCase();
 
-    // AI summary is now active by default, unless explicitly set to 'false'
+    // AI summary, Keywords, Similar Search, and Ranking are now active by default, 
+    // unless explicitly set to 'false' in the query string.
     const summarize = req.query.summarize !== 'false';
-    const includeKeywords = req.query.keywords === 'true';
+    const includeKeywords = req.query.keywords !== 'false';
+    const useSimilar = req.query.similar !== 'false';
+    const useRanking = req.query.rank !== 'false';
 
     if (!query) {
       return res.status(400).json({
@@ -30,21 +107,35 @@ class SearchController {
     }
 
     try {
-      // Run keywords generation concurrently with search to optimize latency if requested
+      // Run keywords generation concurrently if requested
       const keywordsPromise = includeKeywords 
         ? keywordService.generateKeywords(query) 
         : Promise.resolve(null);
 
       let results = [];
-      if (engine === 'google') {
-        results = await googleService.search(query);
-      } else if (engine === 'duckduckgo' || engine === 'ddg') {
-        results = await duckduckgoService.search(query);
+      let similarQueries = null;
+
+      if (useSimilar) {
+        console.log(`Executing default Similar Search for: "${query}" using ${engine}...`);
+        const similarData = await similarSearchService.searchSimilar(query, engine);
+        results = similarData.results;
+        similarQueries = similarData.similarQueries;
       } else {
-        return res.status(400).json({
-          success: false,
-          error: `Unsupported search engine: "${engine}". Use "duckduckgo" or "google".`
-        });
+        if (engine === 'google') {
+          results = await googleService.search(query);
+        } else if (engine === 'duckduckgo' || engine === 'ddg') {
+          results = await duckduckgoService.search(query);
+        } else {
+          return res.status(400).json({
+            success: false,
+            error: `Unsupported search engine: "${engine}". Use "duckduckgo" or "google".`
+          });
+        }
+      }
+
+      // Apply LLM ranking and filtering if enabled (default)
+      if (useRanking && results.length > 0) {
+        results = await rankingService.rankResults(query, results);
       }
 
       // Format search items and extract metadata
@@ -58,11 +149,13 @@ class SearchController {
 
         return {
           rank: index + 1,
+          relevanceScore: useRanking ? 'Top Result' : undefined,
           title: item.title,
           url: item.url,
           domain: domain,
           favicon: domain ? `https://www.google.com/s2/favicons?sz=64&domain=${domain}` : '',
           snippet: item.snippet,
+          matchedQuery: item.matchedQuery || undefined, // Only present in similar search
           source: engine === 'ddg' ? 'duckduckgo' : engine
         };
       });
@@ -82,6 +175,7 @@ class SearchController {
         meta: {
           query,
           engine: engine === 'ddg' ? 'duckduckgo' : engine,
+          similarQueries: similarQueries || undefined,
           totalResults: formattedResults.length,
           timeTakenMs,
           timestamp: new Date().toISOString(),

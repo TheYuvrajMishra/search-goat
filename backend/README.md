@@ -56,18 +56,20 @@ npm start
 The service supports both `/api/search` and `/search` prefixes.
 
 ### 1. Standard Search
-`GET /search/q?query=<term>&engine=<engine>&summarize=<bool>&keywords=<bool>`
+`GET /search/q?query=<term>&engine=<engine>&summarize=<bool>&keywords=<bool>&similar=<bool>&rank=<bool>`
 `GET /search/q/:query`
 
 - **Parameters**:
   - `q` or `query`: The search term (required).
   - `engine`: `duckduckgo` (default) or `google`.
   - `summarize`: `true` (default) or `false`. Includes an AI summary of results.
-  - `keywords`: `true` or `false` (default). Includes optimized keywords in metadata.
+  - `keywords`: `true` (default) or `false`. Includes optimized keywords in metadata.
+  - `similar`: `true` (default) or `false`. Executes a comprehensive parallel search with 5 similar queries.
+  - `rank`: `true` (default) or `false`. Uses an LLM to rank results and filter out irrelevant items, returning the top 10.
 
 ### 2. AI Summary
 `GET /search/summary?query=<term>`
-Short-hand for search with summarization enabled.
+Short-hand for search with summarization, keywords, similar search, and AI ranking enabled (all default).
 
 ### 3. Keywords Generation
 `GET /search/keywords?q=<term>`
@@ -79,7 +81,12 @@ Returns 5 optimized search keywords for the given query.
 `GET /search/similar/:query`
 Generates 5 similar queries and performs parallel searches, returning interleaved and deduplicated results.
 
-### 5. Engine-Specific Routes
+### 5. Top Relevant Results
+`GET /search/top?query=<term>`
+`GET /search/top/:query`
+Performs a comprehensive search using multiple similar queries, then uses an LLM to rank and filter the results, returning only the top 10 most relevant, high-quality items.
+
+### 6. Engine-Specific Routes
 - `GET /search/google?q=<term>`
 - `GET /search/duckduckgo?q=<term>`
 - `GET /search/google/summary?q=<term>`

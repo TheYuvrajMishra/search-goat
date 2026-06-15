@@ -3,6 +3,18 @@ const router = express.Router();
 const searchController = require('../controllers/searchController');
 
 /**
+ * Route: GET /api/search/top
+ * Description: Returns top 10 most relevant search results after LLM ranking and filtering.
+ */
+router.get('/top', searchController.handleTopResults);
+
+/**
+ * Route: GET /api/search/top/:query
+ * Description: Path-parameter top 10 search results route
+ */
+router.get('/top/:query', searchController.handleTopResults);
+
+/**
  * Route: GET /api/search
  * Description: Standard search endpoint (defaults to DuckDuckGo primary)
  */
