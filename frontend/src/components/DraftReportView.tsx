@@ -2,8 +2,6 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
-import { FactCheckTable } from './FactCheckTable';
-
 interface Source {
   id: number;
   url: string;
@@ -17,24 +15,15 @@ interface DraftReport {
   title: string;
   markdown: string;
   sources: Source[];
-  claims: any[];
 }
 
 interface DraftReportViewProps {
   drafts: Record<string, DraftReport>;
-  factchecks?: Record<string, any>;
 }
 
-export const DraftReportView: React.FC<DraftReportViewProps> = ({ drafts, factchecks }) => {
-  const [selectedId, setSelectedId] = React.useState(Object.keys(drafts).sort()[0] || 'A');
+export const DraftReportView: React.FC<DraftReportViewProps> = ({ drafts }) => {
+  const [selectedId, setSelectedId] = React.useState('A');
   const draft = drafts[selectedId];
-
-  React.useEffect(() => {
-    if (!drafts[selectedId] && Object.keys(drafts).length > 0) {
-      setSelectedId(Object.keys(drafts).sort()[0]!);
-    }
-  }, [drafts]);
-  const factcheck = factchecks?.[selectedId];
 
   if (Object.keys(drafts).length === 0) {
     return (
@@ -47,7 +36,7 @@ export const DraftReportView: React.FC<DraftReportViewProps> = ({ drafts, factch
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
       <div className="flex space-x-1 p-1 bg-bg-panel brutalist-border w-fit">
-        {Object.keys(drafts).sort().map(id => (
+        {['A', 'B', 'C'].map(id => (
           <button
             key={id}
             onClick={() => setSelectedId(id)}
@@ -60,7 +49,7 @@ export const DraftReportView: React.FC<DraftReportViewProps> = ({ drafts, factch
                   : 'text-text-muted border-transparent cursor-not-allowed'
             }`}
           >
-            {id === 'S' ? 'Synthesis' : `Draft ${id}`}
+            Draft {id}
           </button>
         ))}
       </div>
@@ -100,10 +89,6 @@ export const DraftReportView: React.FC<DraftReportViewProps> = ({ drafts, factch
             </div>
           </div>
         </div>
-      )}
-
-      {factcheck && draft && (
-        <FactCheckTable results={factcheck.results} claims={draft.claims} />
       )}
     </div>
   );

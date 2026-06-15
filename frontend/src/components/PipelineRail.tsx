@@ -11,10 +11,11 @@ const STAGES = [
 ];
 
 interface PipelineRailProps {
+  currentStage?: string;
   stageStatus?: Record<string, 'pending' | 'running' | 'done' | 'error'>;
 }
 
-export const PipelineRail: React.FC<PipelineRailProps> = ({ stageStatus = {} }) => {
+export const PipelineRail: React.FC<PipelineRailProps> = ({ currentStage, stageStatus = {} }) => {
   return (
     <div className="w-64 h-full border-r border-border-default bg-bg-panel flex flex-col">
       <div className="p-6 border-b border-border-default">

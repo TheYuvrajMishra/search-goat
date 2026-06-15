@@ -18,7 +18,7 @@ export const useRunEvents = (runId: string | null) => {
   useEffect(() => {
     if (!runId) return;
 
-    const eventSource = new EventSource(`http://localhost:3002/api/runs/${runId}/events`);
+    const eventSource = new EventSource(`http://localhost:3001/api/runs/${runId}/events`);
 
     eventSource.onmessage = (event) => {
       const data: PipelineEvent = JSON.parse(event.data);

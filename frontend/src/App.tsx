@@ -4,9 +4,6 @@ import { InspectorPanel } from './components/InspectorPanel';
 import { useRunEvents } from './hooks/useRunEvents';
 import { PlanView } from './components/PlanView';
 import { DraftReportView } from './components/DraftReportView';
-import { DebateView } from './components/DebateView';
-import { FinalReportView } from './components/FinalReportView';
-import { RegistryEditor } from './components/RegistryEditor';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('plan');
@@ -14,11 +11,6 @@ const App: React.FC = () => {
   const [query, setQuery] = useState('');
   const [plan, setPlan] = useState<any>(null);
   const [drafts, setDrafts] = useState<Record<string, any>>({});
-  const [factchecks, setFactchecks] = useState<Record<string, any>>({});
-  const [debate, setDebate] = useState<any>(null);
-  const [synthesis, setSynthesis] = useState<any>(null);
-  const [finalFactCheck, setFinalFactCheck] = useState<any>(null);
-  const [finalReport, setFinalReport] = useState<any>(null);
 
   const { stageStatus, progress, currentStage } = useRunEvents(runId);
 
@@ -34,7 +26,7 @@ const App: React.FC = () => {
 
     const fetchPlan = async () => {
       try {
-        const response = await fetch(`http://localhost:3002/runs/${runId}/plan.json`);
+        const response = await fetch(`http://localhost:3001/runs/${runId}/plan.json`);
         if (response.ok) {
           const data = await response.json();
           setPlan(data);
@@ -44,60 +36,10 @@ const App: React.FC = () => {
 
     const fetchDraft = async (id: string) => {
       try {
-        const response = await fetch(`http://localhost:3002/runs/${runId}/drafts/${id}.json`);
+        const response = await fetch(`http://localhost:3001/runs/${runId}/drafts/${id}.json`);
         if (response.ok) {
           const data = await response.json();
           setDrafts(prev => ({ ...prev, [id]: data }));
-        }
-      } catch (err) {}
-    };
-
-    const fetchFactCheck = async (id: string) => {
-      try {
-        const response = await fetch(`http://localhost:3002/runs/${runId}/factchecks/${id}.json`);
-        if (response.ok) {
-          const data = await response.json();
-          setFactchecks(prev => ({ ...prev, [id]: data }));
-        }
-      } catch (err) {}
-    };
-
-    const fetchDebate = async () => {
-      try {
-        const response = await fetch(`http://localhost:3002/runs/${runId}/debate.json`);
-        if (response.ok) {
-          const data = await response.json();
-          setDebate(data);
-        }
-      } catch (err) {}
-    };
-
-    const fetchSynthesis = async () => {
-      try {
-        const response = await fetch(`http://localhost:3002/runs/${runId}/synthesis.json`);
-        if (response.ok) {
-          const data = await response.json();
-          setSynthesis(data);
-        }
-      } catch (err) {}
-    };
-
-    const fetchFinalFactCheck = async () => {
-      try {
-        const response = await fetch(`http://localhost:3002/runs/${runId}/final_factcheck.json`);
-        if (response.ok) {
-          const data = await response.json();
-          setFinalFactCheck(data);
-        }
-      } catch (err) {}
-    };
-
-    const fetchFinalReport = async () => {
-      try {
-        const response = await fetch(`http://localhost:3002/runs/${runId}/final_report.json`);
-        if (response.ok) {
-          const data = await response.json();
-          setFinalReport(data);
         }
       } catch (err) {}
     };
@@ -108,23 +50,6 @@ const App: React.FC = () => {
         if (!drafts[id]) fetchDraft(id);
       });
     }
-    if (stageStatus['fact_checking'] === 'running' || stageStatus['fact_checking'] === 'done') {
-      ['A', 'B', 'C'].forEach(id => {
-        if (!factchecks[id]) fetchFactCheck(id);
-      });
-    }
-    if (stageStatus['debating'] === 'running' || stageStatus['debating'] === 'done') {
-      if (!debate) fetchDebate();
-    }
-    if (stageStatus['synthesizing'] === 'running' || stageStatus['synthesizing'] === 'done') {
-      if (!synthesis) fetchSynthesis();
-    }
-    if (stageStatus['final_fact_check'] === 'running' || stageStatus['final_fact_check'] === 'done') {
-      if (!finalFactCheck) fetchFinalFactCheck();
-    }
-    if (stageStatus['finalizing'] === 'running' || stageStatus['finalizing'] === 'done' || stageStatus['done'] === 'done') {
-      if (!finalReport) fetchFinalReport();
-    }
   }, [runId, stageStatus]);
 
   const tabs = [
@@ -133,7 +58,6 @@ const App: React.FC = () => {
     { id: 'debate', label: 'Debate' },
     { id: 'synthesis', label: 'Synthesis' },
     { id: 'final', label: 'Final Report' },
-    { id: 'registry', label: 'Registry' },
   ];
 
   const startRun = async () => {
@@ -142,7 +66,7 @@ const App: React.FC = () => {
     setDrafts({});
     
     try {
-      const response = await fetch('http://localhost:3002/api/runs', {
+      const response = await fetch('http://localhost:3001/api/runs', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ query }),
@@ -159,28 +83,7 @@ const App: React.FC = () => {
       case 'plan':
         return <PlanView plan={plan} />;
       case 'drafts':
-        return <DraftReportView drafts={drafts} factchecks={factchecks} />;
-      case 'debate':
-        return <DebateView debate={debate} />;
-      case 'synthesis':
-        return (
-          <div className="space-y-6">
-            <div className="p-6 bg-bg-panel border border-border-strong">
-              <h2 className="text-xl font-bold tracking-tighter mb-2">Synthesized Draft</h2>
-              <p className="text-sm text-text-secondary font-sans leading-relaxed">
-                The master researcher is consolidating findings and resolving contentions.
-              </p>
-            </div>
-            <DraftReportView 
-              drafts={synthesis ? { S: { ...synthesis, approach_id: 'S', claims: [] } } : {}} 
-              factchecks={finalFactCheck ? { S: finalFactCheck } : {}}
-            />
-          </div>
-        );
-      case 'final':
-        return <FinalReportView report={finalReport} finalFactCheck={finalFactCheck} />;
-      case 'registry':
-        return <RegistryEditor />;
+        return <DraftReportView drafts={drafts} />;
       default:
         return (
           <div className="h-64 border border-dashed border-border-strong flex items-center justify-center text-text-muted font-mono-accent uppercase tracking-widest">
