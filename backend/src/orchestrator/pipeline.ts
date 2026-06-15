@@ -1,7 +1,5 @@
 import { RunStore, RunMetadata } from './runStore.js';
 import { EventEmitter } from 'events';
-import { PlannerAgent, PlanOutput } from '../agents/planner.js';
-import { ResearcherAgent } from '../agents/researcher.js';
 
 export type PipelineStage = 
   | 'planning' 
@@ -81,42 +79,20 @@ export class PipelineOrchestrator extends EventEmitter {
   }
 
   private async processStage(runId: string, stage: PipelineStage) {
-    const meta = await RunStore.readArtifact<RunMetadata>(runId, 'meta.json');
-    if (!meta) throw new Error(`Metadata not found for run ${runId}`);
-
+    // Placeholder for actual agent calls
+    // In later phases, this will call Planner, Researcher, etc.
     console.log(`[Orchestrator] Processing ${stage} for ${runId}`);
-
-    switch (stage) {
-      case 'planning':
-        await PlannerAgent.run(runId, meta.query);
-        break;
-      
-      case 'researching':
-        const plan = await RunStore.readArtifact<PlanOutput>(runId, 'plan.json');
-        if (!plan) throw new Error(`Plan not found for run ${runId}`);
-        
-        // Run all 3 researchers in parallel
-        await Promise.all(plan.approaches.map(approach => 
-          ResearcherAgent.run(runId, approach)
-        ));
-        break;
-
-      default:
-        // Simulate other stages
-        await new Promise(resolve => setTimeout(resolve, 500));
-        break;
-    }
+    
+    // Simulate work
+    await new Promise(resolve => setTimeout(resolve, 500));
 
     if (stage === 'done') return;
 
-    // Persist a dummy artifact if not already persisted by the agent
-    const artifactExists = await RunStore.readArtifact(runId, `${stage}.json`);
-    if (!artifactExists) {
-      await RunStore.writeArtifact(runId, `${stage}.json`, { 
-        status: 'completed',
-        timestamp: new Date().toISOString()
-      });
-    }
+    // Persist a dummy artifact for the stage
+    await RunStore.writeArtifact(runId, `${stage}.json`, { 
+      status: 'completed',
+      timestamp: new Date().toISOString()
+    });
   }
 
   private emitEvent(runId: string, stage: PipelineStage, status: PipelineStatus, progress: number, message: string) {

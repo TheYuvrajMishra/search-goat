@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import path from 'path';
 import { PipelineOrchestrator } from './orchestrator/pipeline.js';
 import { handleEvents } from './api/ws.js';
 
@@ -12,10 +11,6 @@ const PORT = process.env.PORT || 3001;
 
 app.use(cors());
 app.use(express.json());
-
-// Expose runs directory for artifacts
-const RUNS_DIR = process.env.RUN_STORE_PATH || './runs';
-app.use('/runs', express.static(path.resolve(RUNS_DIR)));
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', message: 'search-goat backend is running' });

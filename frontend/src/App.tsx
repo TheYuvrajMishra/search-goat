@@ -1,56 +1,14 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { PipelineRail } from './components/PipelineRail';
 import { InspectorPanel } from './components/InspectorPanel';
 import { useRunEvents } from './hooks/useRunEvents';
-import { PlanView } from './components/PlanView';
-import { DraftReportView } from './components/DraftReportView';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState('plan');
   const [runId, setRunId] = useState<string | null>(null);
   const [query, setQuery] = useState('');
-  const [plan, setPlan] = useState<any>(null);
-  const [drafts, setDrafts] = useState<Record<string, any>>({});
 
   const { stageStatus, progress, currentStage } = useRunEvents(runId);
-
-  // Auto-switch tabs based on progress
-  useEffect(() => {
-    if (currentStage === 'planning' && activeTab !== 'plan') setActiveTab('plan');
-    if (currentStage === 'researching' && activeTab === 'plan') setActiveTab('drafts');
-  }, [currentStage]);
-
-  // Fetch plan and drafts when they are ready
-  useEffect(() => {
-    if (!runId) return;
-
-    const fetchPlan = async () => {
-      try {
-        const response = await fetch(`http://localhost:3001/runs/${runId}/plan.json`);
-        if (response.ok) {
-          const data = await response.json();
-          setPlan(data);
-        }
-      } catch (err) {}
-    };
-
-    const fetchDraft = async (id: string) => {
-      try {
-        const response = await fetch(`http://localhost:3001/runs/${runId}/drafts/${id}.json`);
-        if (response.ok) {
-          const data = await response.json();
-          setDrafts(prev => ({ ...prev, [id]: data }));
-        }
-      } catch (err) {}
-    };
-
-    if (stageStatus['planning'] === 'done' && !plan) fetchPlan();
-    if (stageStatus['researching'] === 'running' || stageStatus['researching'] === 'done') {
-      ['A', 'B', 'C'].forEach(id => {
-        if (!drafts[id]) fetchDraft(id);
-      });
-    }
-  }, [runId, stageStatus]);
 
   const tabs = [
     { id: 'plan', label: 'Plan' },
@@ -62,8 +20,6 @@ const App: React.FC = () => {
 
   const startRun = async () => {
     if (!query) return;
-    setPlan(null);
-    setDrafts({});
     
     try {
       const response = await fetch('http://localhost:3001/api/runs', {
@@ -75,21 +31,6 @@ const App: React.FC = () => {
       setRunId(data.runId);
     } catch (error) {
       console.error('Failed to start run:', error);
-    }
-  };
-
-  const renderContent = () => {
-    switch (activeTab) {
-      case 'plan':
-        return <PlanView plan={plan} />;
-      case 'drafts':
-        return <DraftReportView drafts={drafts} />;
-      default:
-        return (
-          <div className="h-64 border border-dashed border-border-strong flex items-center justify-center text-text-muted font-mono-accent uppercase tracking-widest">
-            Content area for: {activeTab}
-          </div>
-        );
     }
   };
 
@@ -111,12 +52,12 @@ const App: React.FC = () => {
             </div>
           </div>
           
-          <nav className="flex space-x-0 overflow-x-auto">
+          <nav className="flex space-x-0">
             {tabs.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`px-6 py-3 text-sm font-mono-accent border-t border-l border-r border-transparent -mb-[1px] whitespace-nowrap ${
+                className={`px-6 py-3 text-sm font-mono-accent border-t border-l border-r border-transparent -mb-[1px] ${
                   activeTab === tab.id
                     ? 'border-border-default bg-bg-base text-accent border-b-2 border-b-accent'
                     : 'text-text-secondary hover:text-text-primary'
@@ -144,19 +85,20 @@ const App: React.FC = () => {
                 />
                 <button
                   onClick={startRun}
-                  className="bg-accent text-bg-base font-bold px-6 py-2 uppercase tracking-tighter hover:opacity-90 transition-opacity"
+                  className="bg-accent text-bg-base font-bold px-6 py-2 uppercase tracking-tighter hover:opacity-90"
                 >
                   Run
                 </button>
               </div>
             </div>
           ) : (
-            <div className="max-w-5xl mx-auto min-h-full">
-              <div className="mb-8 p-4 border border-accent/20 bg-accent/5 font-mono text-xs text-accent flex justify-between items-center">
-                <span>{currentStage ? `[${currentStage.toUpperCase()}]` : 'INITIALIZING...'} {progress}% Complete</span>
-                <span className="animate-pulse">● LIVE</span>
+            <div className="max-w-4xl mx-auto h-full flex flex-col">
+              <div className="mb-8 p-4 border border-accent/20 bg-accent/5 font-mono text-xs text-accent">
+                {currentStage ? `[${currentStage.toUpperCase()}]` : 'INITIALIZING...'} {progress}% Complete
               </div>
-              {renderContent()}
+              <div className="flex-1 border border-dashed border-border-strong flex items-center justify-center text-text-muted font-mono-accent uppercase tracking-widest">
+                Content area for: {activeTab}
+              </div>
             </div>
           )}
         </div>

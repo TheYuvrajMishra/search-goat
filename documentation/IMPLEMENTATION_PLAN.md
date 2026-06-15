@@ -37,25 +37,25 @@ This document tracks the progress of the search-goat implementation, divided int
 **Goal:** Enable the system to decompose queries into strategies and browse the web for evidence.
 
 ### Checklist
-- [x] **B2.1: LLM Client & Prompt Registry**
-  - [x] Implement `llm/client.ts` with Zod schema validation and auto-repair logic.
-  - [x] Build `registry/loader.ts` to hot-reload Markdown prompts/skills from `/prompts`.
-- [x] **B2.2: Planner Agent**
-  - [x] Implement `planner.ts` to generate 3 distinct approach briefs (JSON).
+- [ ] **B2.1: LLM Client & Prompt Registry**
+  - [ ] Implement `llm/client.ts` with Zod schema validation and auto-repair logic.
+  - [ ] Build `registry/loader.ts` to hot-reload Markdown prompts/skills from `/prompts`.
+- [ ] **B2.2: Planner Agent**
+  - [ ] Implement `planner.ts` to generate 3 distinct approach briefs (JSON).
   - [ ] Add diversity check using embeddings to ensure approaches are methodologically distinct.
-- [x] **B2.3: Playwright Browsing Layer**
-  - [x] Implement `PlaywrightPool.ts` for browser context management.
-  - [x] Build `search.ts` and `extract.ts` for search engine scraping and content cleaning.
-- [x] **B2.4: Researcher Agent**
-  - [x] Implement parallel Research agents (A, B, and C).
-  - [x] Generate `DraftReport` (Markdown) with structured source mapping and `[n]` citations.
-- [x] **F2.1: Research UI**
-  - [x] Build Query Input screen with "depth" presets (Quick, Standard, Deep).
-  - [x] Implement views for "Plan" and "Draft Reports" A/B/C.
+- [ ] **B2.3: Playwright Browsing Layer**
+  - [ ] Implement `PlaywrightPool.ts` for browser context management.
+  - [ ] Build `search.ts` and `extract.ts` for search engine scraping and content cleaning.
+- [ ] **B2.4: Researcher Agent**
+  - [ ] Implement parallel Research agents (A, B, and C).
+  - [ ] Generate `DraftReport` (Markdown) with structured source mapping and `[n]` citations.
+- [ ] **F2.1: Research UI**
+  - [ ] Build Query Input screen with "depth" presets (Quick, Standard, Deep).
+  - [ ] Implement views for "Plan" and "Draft Reports" A/B/C.
 
 ### Phase 2 Observations & Rework
 *(To be filled after each task or phase testing)*
-- **Observation:** Phase 2 complete. The system can now decompose queries into diverse approaches and execute parallel research tasks. The UI renders the `Plan` (approaches A/B/C) and the `DraftReports` with full Markdown support and source logs. Backend exposes artifacts via static file serving for easy frontend access.
+- **Observation:** [Pending]
 - **Rework Needed:** [None]
 
 ---
