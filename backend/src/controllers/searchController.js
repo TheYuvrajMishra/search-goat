@@ -61,6 +61,7 @@ class SearchController {
           title: item.title,
           url: item.url,
           domain: domain,
+          favicon: domain ? `https://www.google.com/s2/favicons?sz=64&domain=${domain}` : '',
           snippet: item.snippet,
           source: engine === 'ddg' ? 'duckduckgo' : engine
         };
@@ -161,7 +162,8 @@ class SearchController {
           rank: index + 1,
           title: item.title,
           url: item.url,
-          domain,
+          domain: domain,
+          favicon: domain ? `https://www.google.com/s2/favicons?sz=64&domain=${domain}` : '',
           snippet: item.snippet,
           matchedQuery: item.matchedQuery,
           source: engine === 'ddg' ? 'duckduckgo' : engine
