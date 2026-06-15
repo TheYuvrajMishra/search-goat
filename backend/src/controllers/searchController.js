@@ -1,10 +1,11 @@
 const googleService = require('../services/googleService');
 const duckduckgoService = require('../services/duckduckgoService');
+const llmService = require('../services/llmService');
 
 class SearchController {
   /**
    * Main handler for searches. Defaulting to DuckDuckGo as the primary engine,
-   * but allowing Google if specified.
+   * but allowing Google if specified. Supports optional AI summaries.
    */
   async handleSearch(req, res) {
     const startTime = Date.now();
@@ -14,6 +15,9 @@ class SearchController {
     
     // Default engine is 'duckduckgo' (primary)
     const engine = (req.query.engine || 'duckduckgo').toLowerCase();
+
+    // Check if AI summary is requested via parameter or route path
+    const summarize = req.query.summarize === 'true' || req.path.includes('/summary');
 
     if (!query) {
       return res.status(400).json({
@@ -55,6 +59,12 @@ class SearchController {
         };
       });
 
+      // Generate AI summary if requested and results are present
+      let summary = null;
+      if (summarize && formattedResults.length > 0) {
+        summary = await llmService.generateSummary(query, formattedResults);
+      }
+
       const timeTakenMs = Date.now() - startTime;
 
       return res.status(200).json({
@@ -66,6 +76,7 @@ class SearchController {
           timeTakenMs,
           timestamp: new Date().toISOString()
         },
+        summary: summary || undefined,
         results: formattedResults
       });
     } catch (error) {
