@@ -69,10 +69,6 @@ const ChatPage: React.FC = () => {
             transition={{ duration: 1.2, ease: [0.32, 0.72, 0, 1] }}
             className="flex-1"
           >
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/5 text-[10px] uppercase tracking-[0.3em] font-bold text-black/60 mb-6">
-              <span className="w-1.5 h-1.5 rounded-full bg-black/60 animate-pulse" />
-              Structural Intelligence
-            </div>
             <h1 className="text-5xl md:text-7xl leading-[0.9] font-sans font-bold tracking-tight text-black">
               Search <span className="text-black/25">Goat</span>
             </h1>
