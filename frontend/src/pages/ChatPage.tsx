@@ -78,7 +78,7 @@ const ChatPage: React.FC = () => {
           className="flex flex-col gap-6 md:gap-8"
         >
           <h1 className="text-[56px] sm:text-[72px] md:text-[100px] leading-[0.8] font-serif font-medium tracking-[-0.06em] text-[#1A1817]">
-            Search<span className="text-[#1A1817]/10 ml-[0.01em]">Goat</span>
+            Search<span className="text-[#1A1817]/50 italic ml-[0.01em]">Goat</span>
           </h1>
         </motion.div>
       </header>
