@@ -1,1 +1,42 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Geist", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-serif: "PP Editorial New", "Clash Display", serif;
+}
+
+@layer base {
+  :root {
+    --bg-main: #050505;
+    --accent-primary: #10b981;
+    --accent-secondary: #8b5cf6;
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: #fafafa;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+  }
+
+  /* Custom ease based on Vanguard directive */
+  ::selection {
+    background: rgba(16, 185, 129, 0.2);
+    color: #10b981;
+  }
+}
+
+@layer utilities {
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .text-glow {
+    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  }
+}
