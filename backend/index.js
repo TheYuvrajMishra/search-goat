@@ -1,8 +1,13 @@
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
+const connectDB = require('./src/config/db');
 const searchRouter = require('./src/routes/search');
+const sessionRouter = require('./src/routes/session');
 const browserService = require('./src/services/browserService');
+
+// Connect to MongoDB
+connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -23,13 +28,24 @@ app.use((req, res, next) => {
 // Supporting both /api/search and direct /search contexts
 app.use('/api/search', searchRouter);
 app.use('/search', searchRouter);
+app.use('/api/sessions', sessionRouter);
+app.use('/sessions', sessionRouter);
 
 // Health check endpoint
 app.get('/status', (req, res) => {
+  const mongoose = require('mongoose');
+  const dbState = mongoose.connection.readyState;
+  const dbStatusMap = {
+    0: 'disconnected',
+    1: 'connected',
+    2: 'connecting',
+    3: 'disconnecting'
+  };
   res.status(200).json({
     status: 'online',
     timestamp: new Date().toISOString(),
-    browserInitialized: !!(browserService.browser && browserService.browser.connected)
+    browserInitialized: !!(browserService.browser && browserService.browser.connected),
+    database: dbStatusMap[dbState] || 'unknown'
   });
 });
 

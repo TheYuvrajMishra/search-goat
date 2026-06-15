@@ -21,10 +21,95 @@ const ChatPage: React.FC = () => {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [sessions, setSessions] = useState<any[]>([]);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  const handleResetSession = () => {
+  // Load session history from MongoDB backend on mount
+  const fetchSessions = async () => {
+    try {
+      const response = await fetch('http://localhost:3000/sessions');
+      const data = await response.json();
+      if (data.success) {
+        setSessions(data.sessions.map((s: any) => ({
+          id: s._id,
+          title: s.title,
+          createdAt: s.createdAt,
+          updatedAt: s.updatedAt
+        })));
+      }
+    } catch (error) {
+      console.error('Failed to fetch sessions:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchSessions();
+  }, []);
+
+  const handleSessionSelect = async (sessionId: string) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`http://localhost:3000/sessions/${sessionId}`);
+      const data = await response.json();
+      if (data.success) {
+        setCurrentSessionId(sessionId);
+        if (data.session.messages && data.session.messages.length > 0) {
+          setMessages(data.session.messages);
+        } else {
+          setMessages([
+            {
+              role: 'assistant',
+              content: "Welcome to the Search Goat editorial suite. I am your autonomous intelligence architect. My directive is to parse the global noise and synthesize definitive research pillars for your inquiry. Where shall we begin our investigation?"
+            }
+          ]);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to load session details:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSessionDelete = async (sessionId: string) => {
+    try {
+      const response = await fetch(`http://localhost:3000/sessions/${sessionId}`, {
+        method: 'DELETE'
+      });
+      const data = await response.json();
+      if (data.success) {
+        if (currentSessionId === sessionId) {
+          handleNewSession();
+        }
+        fetchSessions();
+      }
+    } catch (error) {
+      console.error('Failed to delete session:', error);
+    }
+  };
+
+  const handleSessionRename = async (sessionId: string, newTitle: string) => {
+    try {
+      const response = await fetch(`http://localhost:3000/sessions/${sessionId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ title: newTitle })
+      });
+      const data = await response.json();
+      if (data.success) {
+        fetchSessions();
+      }
+    } catch (error) {
+      console.error('Failed to rename session:', error);
+    }
+  };
+
+  const handleNewSession = () => {
+    setCurrentSessionId(null);
     setMessages([
       {
         role: 'assistant',
@@ -32,6 +117,21 @@ const ChatPage: React.FC = () => {
       }
     ]);
   };
+
+  const handleResetSession = async () => {
+    if (currentSessionId) {
+      try {
+        await fetch(`http://localhost:3000/sessions/${currentSessionId}`, {
+          method: 'DELETE'
+        });
+        fetchSessions();
+      } catch (e) {
+        console.error('Failed to reset session:', e);
+      }
+    }
+    handleNewSession();
+  };
+
   const scrollToBottom = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
@@ -48,7 +148,6 @@ const ChatPage: React.FC = () => {
     if (lastMessage.role === 'user') {
       scrollToBottom();
     } else {
-      // Scroll to the top of the newly generated assistant response
       const timer = setTimeout(() => {
         if (scrollContainerRef.current) {
           const messageElements = scrollContainerRef.current.querySelectorAll('.chat-message-container');
@@ -80,7 +179,23 @@ const ChatPage: React.FC = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`http://localhost:3000/search/q?query=${encodeURIComponent(query)}`);
+      let activeSessionId = currentSessionId;
+
+      // Create new session in MongoDB if not already established
+      if (!activeSessionId) {
+        const sessionRes = await fetch('http://localhost:3000/sessions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: 'New Investigation' })
+        });
+        const sessionData = await sessionRes.json();
+        if (sessionData.success) {
+          activeSessionId = sessionData.session._id;
+          setCurrentSessionId(activeSessionId);
+        }
+      }
+
+      const response = await fetch(`http://localhost:3000/search/q?query=${encodeURIComponent(query)}${activeSessionId ? `&sessionId=${activeSessionId}` : ''}`);
       const data = await response.json();
 
       if (data.success) {
@@ -91,6 +206,9 @@ const ChatPage: React.FC = () => {
           keywords: data.meta?.keywords
         };
         setMessages(prev => [...prev, assistantMessage]);
+        
+        // Refresh session list to show generated LLM title
+        fetchSessions();
       } else {
         throw new Error(data.error || 'Intelligence link severed.');
       }
@@ -109,7 +227,12 @@ const ChatPage: React.FC = () => {
       <Sidebar 
         isSidebarOpen={isSidebarOpen} 
         setIsSidebarOpen={setIsSidebarOpen} 
-        onHistoryClick={handleSendMessage}
+        sessions={sessions}
+        currentSessionId={currentSessionId}
+        onSessionSelect={handleSessionSelect}
+        onSessionDelete={handleSessionDelete}
+        onSessionRename={handleSessionRename}
+        onNewSession={handleNewSession}
       />
 
       {/* Main Chat Content Area */}
@@ -131,8 +254,35 @@ const ChatPage: React.FC = () => {
               <PiSidebarLight className="text-xl" />
             </button>
 
-      
+            <a href="/" className="group flex items-baseline gap-2">
+              <h1 className="text-[24px] sm:text-[28px] md:text-[32px] leading-none font-serif font-medium tracking-[-0.04em] text-[#1A1817]">
+                Search<span className="text-[#1A1817]/50 italic ml-[0.01em]">Goat</span>
+              </h1>
+              <span className="hidden sm:inline text-[8px] uppercase tracking-[0.3em] font-black text-[#1A1817]/30 group-hover:text-[#1A1817]/60 transition-colors duration-500">
+                v1.2
+              </span>
+            </a>
           </motion.div>
+
+          {/* Editorial Navigation Linkage */}
+          <motion.nav
+            initial={{ opacity: 0, y: 10, filter: 'blur(10px)' }}
+            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+            transition={{ duration: 1.2, delay: 0.1, ease: [0.32, 0.72, 0, 1] }}
+            className="hidden md:flex items-center gap-8 text-[11px] uppercase tracking-[0.4em] font-bold text-[#1A1817]/40"
+          >
+            <a href="#suite" className="hover:text-[#1A1817] transition-colors duration-500 relative py-1 after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-[#1A1817] after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-700">
+              Suite
+            </a>
+            <span className="w-1 h-1 rounded-full bg-[#1A1817]/10" />
+            <a href="#synthesis" className="hover:text-[#1A1817] transition-colors duration-500 relative py-1 after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-[#1A1817] after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-700">
+              Synthesis
+            </a>
+            <span className="w-1 h-1 rounded-full bg-[#1A1817]/10" />
+            <a href="#archives" className="hover:text-[#1A1817] transition-colors duration-500 relative py-1 after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-[#1A1817] after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-700">
+              Archives
+            </a>
+          </motion.nav>
 
           {/* Control Suite / Actions */}
           <motion.div

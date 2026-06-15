@@ -101,6 +101,64 @@ Answer:`;
       return `Failed to compile AI summary: ${error.message}`;
     }
   }
+
+  /**
+   * Generates a concise, descriptive title (2-4 words) in Title Case from the user's initial search query.
+   * @param {string} query The user's first search query in the session
+   * @returns {Promise<string>} Clean session title
+   */
+  async generateTitle(query) {
+    const prompt = `You are a professional editorial title writer. Create a clean, elegant, and descriptive title for a search session based on the user's search query.
+The title must be between 2 to 4 words. Use Title Case. Do not include any quotation marks, punctuation, or generic filler words (like "Search for", "Inquiry about").
+
+User Search Query: "${query}"
+
+Title:`;
+
+    try {
+      const modelId = await this.getModelId();
+      console.log(`Generating session title for query: "${query}" using model: "${modelId}"...`);
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify({
+          model: modelId,
+          messages: [
+            { 
+              role: 'system', 
+              content: 'You generate short, clean Title Case titles (2-4 words) from queries.' 
+            },
+            { 
+              role: 'user', 
+              content: prompt 
+            }
+          ],
+          temperature: 0.5,
+          max_tokens: 30
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`LLM endpoint returned status ${response.status}`);
+      }
+
+      const data = await response.json();
+      let title = data.choices?.[0]?.message?.content?.trim();
+      
+      // Clean up quotation marks or trailing punctuation
+      if (title) {
+        title = title.replace(/["']/g, '').replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?]/g, "").trim();
+      }
+
+      return title || query.split(' ').slice(0, 3).join(' ');
+    } catch (error) {
+      console.error('LLM Title Generation Error:', error);
+      return query.split(' ').slice(0, 3).join(' ') || 'New Session';
+    }
+  }
 }
 
 module.exports = new LlmService();

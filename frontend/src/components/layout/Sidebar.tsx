@@ -1,21 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { PiXLight, PiUserLight, PiArrowUpRightLight } from 'react-icons/pi';
+import { 
+  PiXLight, 
+  PiUserLight, 
+  PiTrashLight, 
+  PiNotePencilLight, 
+  PiCheckLight, 
+  PiPlusLight 
+} from 'react-icons/pi';
+
+interface Session {
+  id: string;
+  title: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 interface SidebarProps {
   isSidebarOpen: boolean;
   setIsSidebarOpen: (open: boolean) => void;
-  onHistoryClick: (query: string) => void;
+  sessions: Session[];
+  currentSessionId: string | null;
+  onSessionSelect: (sessionId: string) => void;
+  onSessionDelete: (sessionId: string) => void;
+  onSessionRename: (sessionId: string, newTitle: string) => void;
+  onNewSession: () => void;
 }
-
-const dummyHistories = [
-  { query: "Decentralized Energy Grids in Northern Europe", date: "June 15, 2026" },
-  { query: "Global Semiconductor Supply Chains Vol. IV", date: "June 14, 2026" },
-  { query: "Neo-Classical Architecture Trends in Baltic Cities", date: "June 12, 2026" },
-  { query: "Artificial Intelligence Copyright Law Review", date: "June 10, 2026" },
-  { query: "Synthetic Biology Regulation Frameworks", date: "June 05, 2026" },
-  { query: "Quantum Cryptography Standards", date: "May 28, 2026" },
-];
 
 // Stagger variants for the history items cascade reveal
 const containerVariants = {
@@ -41,13 +51,32 @@ const itemVariants = {
 export const Sidebar: React.FC<SidebarProps> = ({ 
   isSidebarOpen, 
   setIsSidebarOpen, 
-  onHistoryClick 
+  sessions,
+  currentSessionId,
+  onSessionSelect,
+  onSessionDelete,
+  onSessionRename,
+  onNewSession
 }) => {
+  const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
+  const [editTitleValue, setEditTitleValue] = useState('');
+
+  const handleStartRename = (id: string, currentTitle: string) => {
+    setEditingSessionId(id);
+    setEditTitleValue(currentTitle);
+  };
+
+  const handleSaveRename = (id: string) => {
+    if (editTitleValue.trim() !== '') {
+      onSessionRename(id, editTitleValue.trim());
+    }
+    setEditingSessionId(null);
+  };
 
   const renderSidebarContent = () => (
     <div className="flex flex-col h-full justify-between select-none">
       <div className="flex flex-col gap-8">
-        {/* Sidebar Header with Subheading Pill */}
+        {/* Sidebar Header with Subheading Pill & Actions */}
         <div className="flex items-center justify-between pb-6 border-b border-[#1A1817]/[0.05]">
           <div className="flex flex-col gap-1.5">
             <span className="w-max rounded-full px-2 py-0.5 bg-[#1A1817]/[0.03] border border-[#1A1817]/[0.05] text-[7.5px] uppercase tracking-[0.2em] font-black text-[#1A1817]/50">
@@ -62,13 +91,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
               </span>
             </div>
           </div>
-          {/* Close button for mobile */}
-          <button 
-            onClick={() => setIsSidebarOpen(false)} 
-            className="md:hidden p-1.5 rounded-full hover:bg-[#1A1817]/5 text-[#1A1817]/50 hover:text-[#1A1817] transition-all duration-350 cursor-pointer"
-          >
-            <PiXLight className="text-lg" />
-          </button>
+          
+          <div className="flex items-center gap-1">
+            {/* New Session Button */}
+            <button
+              onClick={onNewSession}
+              className="p-1.5 rounded-full hover:bg-[#1A1817]/5 text-[#1A1817]/60 hover:text-[#1A1817] transition-all duration-300 cursor-pointer"
+              title="New Session"
+            >
+              <PiPlusLight className="text-lg" />
+            </button>
+            {/* Close button for mobile */}
+            <button 
+              onClick={() => setIsSidebarOpen(false)} 
+              className="md:hidden p-1.5 rounded-full hover:bg-[#1A1817]/5 text-[#1A1817]/50 hover:text-[#1A1817] transition-all duration-350 cursor-pointer"
+            >
+              <PiXLight className="text-lg" />
+            </button>
+          </div>
         </div>
 
         {/* Intelligence Histories */}
@@ -82,32 +122,92 @@ export const Sidebar: React.FC<SidebarProps> = ({
             animate="show"
             className="flex flex-col gap-2 max-h-[52vh] overflow-y-auto scrollbar-hide"
           >
-            {dummyHistories.map((hist, i) => (
-              <motion.div key={i} variants={itemVariants}>
-                <button
-                  onClick={() => {
-                    onHistoryClick(hist.query);
-                    setIsSidebarOpen(false);
-                  }}
-                  className="group w-full p-1 rounded-2xl bg-[#1A1817]/[0.02] border border-[#1A1817]/[0.03] hover:bg-[#1A1817]/[0.04] hover:border-[#1A1817]/[0.08] shadow-[0_2px_8px_rgba(26,24,23,0.01)] hover:shadow-[0_4px_16px_rgba(26,24,23,0.03)] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] cursor-pointer"
-                >
-                  <div className="bg-[#FDFBF7]/60 rounded-[calc(1rem-0.25rem)] p-3.5 shadow-[inset_0_1px_1px_rgba(253,251,247,0.8)] flex items-center justify-between gap-3 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:bg-[#FDFBF7]">
-                    <div className="flex flex-col items-start min-w-0">
-                      <span className="text-[12px] font-serif font-medium text-[#1A1817]/75 group-hover:text-[#1A1817] transition-colors leading-[1.3] text-wrap pretty line-clamp-2 text-left">
-                        {hist.query}
-                      </span>
-                      <span className="text-[8px] uppercase tracking-[0.2em] font-bold text-[#1A1817]/30 group-hover:text-[#1A1817]/50 mt-2 transition-colors">
-                        {hist.date}
-                      </span>
-                    </div>
-                    {/* Nested Button-in-Button Arrow Wrapper */}
-                    <div className="w-6 h-6 rounded-full bg-[#1A1817]/[0.02] border border-[#1A1817]/[0.04] flex items-center justify-center text-[#1A1817]/35 group-hover:text-[#FDFBF7] group-hover:bg-[#1A1817] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 flex-shrink-0">
-                      <PiArrowUpRightLight className="text-[10px]" />
+            {sessions.map((sessionItem) => {
+              const isEditing = editingSessionId === sessionItem.id;
+              const isActive = sessionItem.id === currentSessionId;
+              
+              return (
+                <motion.div key={sessionItem.id} variants={itemVariants}>
+                  <div
+                    className={`group w-full p-1 rounded-2xl border transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${
+                      isActive 
+                        ? 'bg-[#1A1817]/[0.04] border-[#1A1817]/[0.1] shadow-[0_4px_16px_rgba(26,24,23,0.02)]' 
+                        : 'bg-[#1A1817]/[0.02] border-[#1A1817]/[0.03] hover:bg-[#1A1817]/[0.04] hover:border-[#1A1817]/[0.08] shadow-[0_2px_8px_rgba(26,24,23,0.01)] hover:shadow-[0_4px_16px_rgba(26,24,23,0.03)]'
+                    }`}
+                  >
+                    <div className={`rounded-[calc(1rem-0.25rem)] p-3 flex items-center justify-between gap-3 transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${isActive ? 'bg-[#FDFBF7]' : 'bg-[#FDFBF7]/60 group-hover:bg-[#FDFBF7]'}`}>
+                      {isEditing ? (
+                        <div className="flex items-center gap-2 w-full min-w-0">
+                          <input
+                            type="text"
+                            value={editTitleValue}
+                            onChange={(e) => setEditTitleValue(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter') handleSaveRename(sessionItem.id);
+                              if (e.key === 'Escape') setEditingSessionId(null);
+                            }}
+                            autoFocus
+                            className="flex-1 text-[12px] font-serif font-medium text-[#1A1817] bg-transparent border-b border-[#1A1817]/30 focus:border-[#1A1817] outline-none py-0.5 px-0 min-w-0"
+                          />
+                          <button
+                            onClick={() => handleSaveRename(sessionItem.id)}
+                            className="p-1 rounded-full hover:bg-[#1A1817]/5 text-emerald-600 transition-colors cursor-pointer"
+                          >
+                            <PiCheckLight className="text-xs" />
+                          </button>
+                          <button
+                            onClick={() => setEditingSessionId(null)}
+                            className="p-1 rounded-full hover:bg-[#1A1817]/5 text-rose-600 transition-colors cursor-pointer"
+                          >
+                            <PiXLight className="text-xs" />
+                          </button>
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => {
+                              onSessionSelect(sessionItem.id);
+                              setIsSidebarOpen(false);
+                            }}
+                            className="flex flex-col items-start min-w-0 text-left cursor-pointer flex-1"
+                          >
+                            <span className="text-[12px] font-serif font-medium text-[#1A1817]/75 group-hover:text-[#1A1817] transition-colors leading-[1.3] text-wrap pretty line-clamp-2">
+                              {sessionItem.title}
+                            </span>
+                            <span className="text-[8px] uppercase tracking-[0.2em] font-bold text-[#1A1817]/30 group-hover:text-[#1A1817]/50 mt-1.5 transition-colors">
+                              {new Date(sessionItem.updatedAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          </button>
+                          
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            {/* Rename Button */}
+                            <button
+                              onClick={() => handleStartRename(sessionItem.id, sessionItem.title)}
+                              className="p-1 rounded-full hover:bg-[#1A1817]/5 text-[#1A1817]/30 hover:text-[#1A1817] opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer"
+                              title="Rename Session"
+                            >
+                              <PiNotePencilLight className="text-xs" />
+                            </button>
+                            {/* Delete Button */}
+                            <button
+                              onClick={() => onSessionDelete(sessionItem.id)}
+                              className="p-1 rounded-full hover:bg-[#1A1817]/5 text-[#1A1817]/30 hover:text-rose-600 opacity-0 group-hover:opacity-100 transition-all duration-300 cursor-pointer"
+                              title="Delete Session"
+                            >
+                              <PiTrashLight className="text-xs" />
+                            </button>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
-                </button>
-              </motion.div>
-            ))}
+                </motion.div>
+              );
+            })}
           </motion.div>
         </div>
       </div>

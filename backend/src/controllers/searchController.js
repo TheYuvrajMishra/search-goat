@@ -4,6 +4,8 @@ const llmService = require('../services/llmService');
 const keywordService = require('../services/keywordService');
 const similarSearchService = require('../services/similarSearchService');
 const rankingService = require('../services/rankingService');
+const Session = require('../models/Session');
+const Message = require('../models/Message');
 
 class SearchController {
   /**
@@ -88,6 +90,7 @@ class SearchController {
     
     // Support query in param, q, or query query-string parameters
     const query = req.query.q || req.query.query || req.params.query;
+    const sessionId = req.query.sessionId || req.query.session_id || req.body.sessionId;
     
     // Default engine is 'duckduckgo' (primary)
     const engine = (req.query.engine || 'duckduckgo').toLowerCase();
@@ -106,7 +109,33 @@ class SearchController {
       });
     }
 
+    // Load or initialize MongoDB session
+    let session = null;
+    if (sessionId) {
+      try {
+        session = await Session.findById(sessionId);
+        if (!session) {
+          session = new Session({ _id: sessionId });
+          await session.save();
+        }
+      } catch (e) {
+        // Fallback for custom or invalid ObjectId strings
+        session = new Session();
+        await session.save();
+      }
+    }
+
     try {
+      // Persist user query message
+      if (session) {
+        const userMsg = new Message({
+          sessionId: session._id,
+          role: 'user',
+          content: query
+        });
+        await userMsg.save();
+      }
+
       // Run keywords generation concurrently if requested
       const keywordsPromise = includeKeywords 
         ? keywordService.generateKeywords(query) 
@@ -168,6 +197,33 @@ class SearchController {
           : Promise.resolve(null)
       ]);
 
+      // Persist assistant message and perform LLM title generation
+      if (session) {
+        const assistantMsg = new Message({
+          sessionId: session._id,
+          role: 'assistant',
+          content: summary || "Synthesis successfully integrated. Review the structural pillars below.",
+          results: formattedResults,
+          keywords: keywords || []
+        });
+        await assistantMsg.save();
+
+        // If this is the first exchange (user + assistant = 2 messages), generate session title using LLM
+        const messageCount = await Message.countDocuments({ sessionId: session._id });
+        if (messageCount <= 2) {
+          try {
+            const generatedTitle = await llmService.generateTitle(query);
+            session.title = generatedTitle;
+          } catch (err) {
+            console.error('LLM Title generation failed:', err);
+          }
+        }
+        
+        // Touch updatedAt timestamp
+        session.updatedAt = Date.now();
+        await session.save();
+      }
+
       const timeTakenMs = Date.now() - startTime;
 
       return res.status(200).json({
@@ -179,7 +235,9 @@ class SearchController {
           totalResults: formattedResults.length,
           timeTakenMs,
           timestamp: new Date().toISOString(),
-          keywords: keywords || undefined
+          keywords: keywords || undefined,
+          sessionId: session ? session._id : undefined,
+          sessionTitle: session ? session.title : undefined
         },
         summary: summary, // Always returned (either the summary string or null)
         results: formattedResults
