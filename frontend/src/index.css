@@ -1,29 +1,30 @@
 @import "tailwindcss";
 
 @theme {
-  --font-sans: "Geist", "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Plus Jakarta Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
   --font-serif: "PP Editorial New", "Clash Display", serif;
 }
 
 @layer base {
   :root {
-    --bg-main: #050505;
-    --accent-primary: #10b981;
-    --accent-secondary: #8b5cf6;
+    --bg-main: #FFFFFF;
+    --bg-secondary: #F5F5F7;
+    --accent-primary: #000000;
+    --text-main: #1D1D1F;
+    --text-muted: #86868B;
   }
 
   body {
     background-color: var(--bg-main);
-    color: #fafafa;
+    color: var(--text-main);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overflow-x: hidden;
   }
 
-  /* Custom ease based on Vanguard directive */
   ::selection {
-    background: rgba(16, 185, 129, 0.2);
-    color: #10b981;
+    background: rgba(0, 0, 0, 0.05);
+    color: #000000;
   }
 }
 
@@ -36,7 +37,11 @@
     scrollbar-width: none;
   }
 
-  .text-glow {
-    text-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+  .ambient-shadow {
+    shadow: 0 20px 80px rgba(0, 0, 0, 0.04);
+  }
+
+  .glass-light {
+    @apply bg-white/70 backdrop-blur-2xl border border-white/20;
   }
 }

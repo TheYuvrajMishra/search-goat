@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 
 interface DoubleBezelContainerProps {
   children: React.ReactNode;
@@ -10,7 +9,7 @@ interface DoubleBezelContainerProps {
 
 /**
  * Implements the Vanguard "Doppelrand" (Double-Bezel) technique.
- * A physical, machined hardware look with nested concentric curves.
+ * Updated for the Soft Structuralism (Light) archetype.
  */
 export const DoubleBezelContainer: React.FC<DoubleBezelContainerProps> = ({
   children,
@@ -20,18 +19,18 @@ export const DoubleBezelContainer: React.FC<DoubleBezelContainerProps> = ({
 }) => {
   return (
     <div className={`relative group ${className}`}>
-      {/* Outer Shell: Machined Frame */}
+      {/* Outer Shell: Machined Frame (Light) */}
       <div className={`
-        relative p-2 rounded-[2.5rem] 
-        bg-white/[0.02] ring-1 ring-white/10 
-        backdrop-blur-2xl shadow-2xl
+        relative p-2 rounded-[3rem] 
+        bg-[#F5F5F7] ring-1 ring-black/[0.03] 
+        shadow-[0_40px_100px_rgba(0,0,0,0.04)]
         ${outerClassName}
       `}>
-        {/* Inner Core: Content Area */}
+        {/* Inner Core: Content Area (Light) */}
         <div className={`
-          relative bg-[#0a0a0a] overflow-hidden
-          rounded-[calc(2.5rem-0.5rem)] 
-          shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]
+          relative bg-white overflow-hidden
+          rounded-[calc(3rem-0.5rem)] 
+          shadow-inner
           ${innerClassName}
         `}>
           {children}

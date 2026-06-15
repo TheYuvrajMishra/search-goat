@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { PiArrowSquareOutLight } from 'react-icons/pi';
+import { PiArrowUpRightLight } from 'react-icons/pi';
 
 interface ResultCardProps {
   result: {
@@ -20,48 +20,50 @@ export const ResultCard: React.FC<ResultCardProps> = ({ result, index }) => {
       href={result.url}
       target="_blank"
       rel="noopener noreferrer"
-      initial={{ opacity: 0, y: 20, filter: 'blur(10px)' }}
-      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
+      whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+      viewport={{ once: true }}
       transition={{ 
-        duration: 0.8, 
-        delay: index * 0.1,
+        duration: 1, 
+        delay: index * 0.05,
         ease: [0.32, 0.72, 0, 1] 
       }}
-      whileHover={{ scale: 1.01 }}
-      whileTap={{ scale: 0.98 }}
-      className="block w-full"
+      whileHover={{ y: -4 }}
+      className="group block w-full"
     >
-      <div className="p-1 rounded-[1.5rem] bg-white/[0.02] ring-1 ring-white/5 hover:ring-white/20 transition-all duration-500">
-        <div className="p-4 bg-[#0d0d0d] rounded-[calc(1.5rem-0.25rem)] shadow-inner">
-          <div className="flex items-start justify-between gap-4 mb-2">
-            <div className="flex items-center gap-2">
-              {result.favicon && (
-                <img src={result.favicon} alt="" className="w-4 h-4 rounded-sm" />
-              )}
-              <span className="text-[10px] uppercase tracking-[0.2em] font-medium text-white/30 truncate max-w-[150px]">
-                {result.domain}
-              </span>
-            </div>
-            <PiArrowSquareOutLight className="text-white/20 text-sm flex-shrink-0" />
+      <div className="relative p-6 rounded-[1.5rem] bg-white border border-black/[0.05] shadow-[0_10px_40px_rgba(0,0,0,0.02)] group-hover:shadow-[0_20px_60px_rgba(0,0,0,0.04)] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]">
+        <div className="flex items-start justify-between gap-6 mb-4">
+          <div className="flex items-center gap-3">
+            {result.favicon ? (
+              <img src={result.favicon} alt="" className="w-4 h-4 rounded-sm grayscale group-hover:grayscale-0 transition-all" />
+            ) : (
+              <div className="w-4 h-4 rounded-full bg-black/5" />
+            )}
+            <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-black/40 group-hover:text-black/60 transition-colors">
+              {result.domain}
+            </span>
           </div>
-          
-          <h4 className="text-[15px] font-medium text-white/90 leading-tight mb-2 group-hover:text-emerald-400 transition-colors">
-            {result.title}
-          </h4>
-          
-          <p className="text-[13px] text-white/40 leading-relaxed line-clamp-2 font-light">
-            {result.snippet}
-          </p>
-          
-          {result.matchedQuery && (
-            <div className="mt-3 flex items-center gap-1.5">
-              <span className="w-1 h-1 rounded-full bg-emerald-500/50" />
-              <span className="text-[9px] text-white/20 italic truncate">
-                Matched: {result.matchedQuery}
-              </span>
-            </div>
-          )}
+          <div className="w-7 h-7 rounded-full bg-black/[0.03] flex items-center justify-center group-hover:bg-black group-hover:text-white transition-all duration-500">
+            <PiArrowUpRightLight className="text-xs" />
+          </div>
         </div>
+        
+        <h4 className="text-[17px] font-bold text-black tracking-tight leading-[1.3] mb-3 group-hover:text-black/70 transition-colors">
+          {result.title}
+        </h4>
+        
+        <p className="text-[14px] text-black/50 leading-relaxed font-medium line-clamp-2">
+          {result.snippet}
+        </p>
+        
+        {result.matchedQuery && (
+          <div className="mt-6 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-500">
+            <div className="w-1 h-1 rounded-full bg-black/20" />
+            <span className="text-[10px] text-black/20 font-bold uppercase tracking-widest">
+              Relevant to: {result.matchedQuery}
+            </span>
+          </div>
+        )}
       </div>
     </motion.a>
   );

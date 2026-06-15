@@ -16,81 +16,78 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 30, filter: 'blur(10px)' }}
+      initial={{ opacity: 0, y: 40, filter: 'blur(15px)' }}
       whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 1, ease: [0.32, 0.72, 0, 1] }}
       className={`flex w-full ${isAssistant ? 'justify-start' : 'justify-end'}`}
     >
-      <div className={`max-w-[90%] md:max-w-[80%] ${isAssistant ? 'w-full' : 'w-auto'}`}>
-        {/* Role & Role Icon */}
-        <div className={`flex items-center gap-3 mb-4 ${isAssistant ? 'justify-start' : 'justify-end'}`}>
-          {isAssistant && (
-            <div className="w-6 h-6 rounded-full bg-emerald-500/20 border border-emerald-500/30 flex items-center justify-center">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-            </div>
-          )}
-          <span className="text-[10px] uppercase tracking-[0.25em] font-medium text-white/30">
-            {isAssistant ? 'Assistant Synthesis' : 'User Request'}
+      <div className={`max-w-[100%] md:max-w-[85%] ${isAssistant ? 'w-full' : 'w-auto'}`}>
+        {/* Meta Label */}
+        <div className={`flex items-center gap-4 mb-4 ${isAssistant ? 'justify-start' : 'justify-end'}`}>
+          <span className="text-[10px] uppercase tracking-[0.4em] font-bold text-black/40">
+            {isAssistant ? 'Synthesized Intelligence' : 'User Query'}
           </span>
-          {!isAssistant && (
-            <div className="w-6 h-6 rounded-full bg-white/5 border border-white/10 flex items-center justify-center">
-              <div className="w-1.5 h-1.5 rounded-full bg-white/40" />
-            </div>
-          )}
+          <div className="h-[1px] w-8 bg-black/10" />
         </div>
 
-        {/* Message Content */}
+        {/* Message Architecture (Double-Bezel) */}
         <div className={`
           relative 
           ${isAssistant 
-            ? 'bg-transparent border-l border-white/10 pl-8' 
-            : 'bg-white/[0.03] ring-1 ring-white/10 p-6 rounded-[2rem] shadow-2xl backdrop-blur-xl'}
+            ? 'bg-transparent' 
+            : 'p-1.5 rounded-[2rem] bg-[#F5F5F7] ring-1 ring-black/[0.05] shadow-sm'}
         `}>
           <div className={`
-            text-[16px] leading-[1.6] text-white/90 font-light whitespace-pre-wrap
-            ${isAssistant ? 'tracking-wide' : ''}
+            relative p-6 
+            ${isAssistant 
+              ? 'p-0' 
+              : 'bg-white rounded-[calc(2rem-0.375rem)] shadow-inner'}
           `}>
-            {message.content}
-          </div>
+            <div className={`
+              text-[16px] md:text-[18px] leading-[1.6] text-black font-medium tracking-tight whitespace-pre-wrap
+              ${isAssistant ? 'font-serif text-[24px] md:text-[32px] leading-[1.35] text-black/90' : ''}
+            `}>
+              {message.content}
+            </div>
 
-          {/* Assistant Metadata */}
-          {isAssistant && (
-            <div className="mt-8 space-y-10">
-              {/* Keywords Tag Cloud */}
-              {message.keywords && message.keywords.length > 0 && (
-                <div className="flex flex-wrap gap-3">
-                  {message.keywords.map((kw, i) => (
-                    <span 
-                      key={i} 
-                      className="px-3 py-1 rounded-full bg-emerald-500/5 border border-emerald-500/10 text-[11px] text-emerald-400/60 font-medium"
-                    >
-                      {kw}
-                    </span>
-                  ))}
-                </div>
-              )}
-
-              {/* Contextual Results Grid */}
-              {message.results && message.results.length > 0 && (
-                <div className="space-y-6">
-                  <div className="flex items-center gap-4">
-                    <div className="h-px flex-1 bg-white/5" />
-                    <span className="text-[10px] uppercase tracking-[0.3em] font-medium text-white/20 whitespace-nowrap">
-                      Source Intelligence
-                    </span>
-                    <div className="h-px flex-1 bg-white/5" />
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                    {message.results.slice(0, 10).map((res, i) => (
-                      <ResultCard key={i} result={res} index={i} />
+            {/* Content Extensions */}
+            {isAssistant && (
+              <div className="mt-12 space-y-16">
+                {/* Keywords Tag Cloud */}
+                {message.keywords && message.keywords.length > 0 && (
+                  <div className="flex flex-wrap gap-3">
+                    {message.keywords.map((kw, i) => (
+                      <span 
+                        key={i} 
+                        className="px-4 py-1.5 rounded-full bg-[#F5F5F7] border border-black/[0.05] text-[11px] text-black/70 font-bold tracking-wide hover:bg-black hover:text-white transition-all duration-500 cursor-default"
+                      >
+                        {kw}
+                      </span>
                     ))}
                   </div>
-                </div>
-              )}
-            </div>
-          )}
+                )}
+
+                {/* Source Grid */}
+                {message.results && message.results.length > 0 && (
+                  <div className="space-y-8">
+                    <div className="flex items-center gap-6">
+                      <span className="text-[11px] uppercase tracking-[0.4em] font-bold text-black/20 whitespace-nowrap">
+                        Documented Sources
+                      </span>
+                      <div className="h-[1px] flex-1 bg-black/5" />
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {message.results.slice(0, 10).map((res, i) => (
+                        <ResultCard key={i} result={res} index={i} />
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>
