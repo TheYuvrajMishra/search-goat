@@ -27,6 +27,30 @@ router.get('/q/:query', searchController.handleSearch);
 router.get('/summary', searchController.handleSearch);
 
 /**
+ * Route: GET /api/search/keywords
+ * Description: Dedicated route to generate 5 optimized search keywords from query string
+ */
+router.get('/keywords', searchController.handleKeywords);
+
+/**
+ * Route: GET /api/search/keywords/:query
+ * Description: Dedicated route to generate 5 optimized search keywords from path param
+ */
+router.get('/keywords/:query', searchController.handleKeywords);
+
+/**
+ * Route: GET /api/search/similar
+ * Description: Dedicated route for parallel search with 5 similar queries from query string
+ */
+router.get('/similar', searchController.handleSimilarSearch);
+
+/**
+ * Route: GET /api/search/similar/:query
+ * Description: Dedicated route for parallel search with 5 similar queries from path param
+ */
+router.get('/similar/:query', searchController.handleSimilarSearch);
+
+/**
  * Route: GET /api/search/google
  * Description: Search endpoint forcing Google
  */

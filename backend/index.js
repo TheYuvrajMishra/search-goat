@@ -58,6 +58,8 @@ const server = app.listen(PORT, () => {
   console.log(` - GET http://localhost:${PORT}/search/q?query=<term>`);
   console.log(` - GET http://localhost:${PORT}/search/q/<term>`);
   console.log(` - GET http://localhost:${PORT}/search/summary?query=<term>`);
+  console.log(` - GET http://localhost:${PORT}/search/keywords?q=<term>`);
+  console.log(` - GET http://localhost:${PORT}/search/similar?query=<term>`);
   console.log(` - GET http://localhost:${PORT}/search/google?q=<term>`);
   console.log(` - GET http://localhost:${PORT}/search/duckduckgo?q=<term>`);
   console.log(` - GET http://localhost:${PORT}/search/google/summary?q=<term>`);
