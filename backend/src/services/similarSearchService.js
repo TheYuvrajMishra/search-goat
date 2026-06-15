@@ -73,7 +73,7 @@ Alternative Queries:`;
   }
 
   /**
-   * Generates 5 similar queries, queries the engine for all of them in parallel,
+   * Generates 5 similar queries, queries the engine for all of them in parallel (staggered),
    * merges the results, and deduplicates them by URL.
    * @param {string} query The user's input query
    * @param {string} engine The search engine ('google' or 'duckduckgo')
@@ -84,16 +84,24 @@ Alternative Queries:`;
     const similarQueries = await this.generateSimilarQueries(query);
     console.log(`Similar queries generated:`, similarQueries);
 
-    // 2. Perform parallel searches
+    // 2. Perform parallel searches with staggered launch
     const searchService = engine === 'google' ? googleService : duckduckgoService;
     
-    console.log(`Executing 5 searches in parallel using "${engine}"...`);
-    const searchPromises = similarQueries.map(q => 
-      searchService.search(q).catch(error => {
+    console.log(`Executing 5 searches in parallel (staggered) using "${engine}"...`);
+    const searchPromises = similarQueries.map((q, index) => {
+      return (async () => {
+        // Stagger the launch of each query by index * 400ms to avoid concurrent bot-rate limits
+        await new Promise(resolve => setTimeout(resolve, index * 400));
+        
+        console.log(`Launching search for: "${q}"...`);
+        const results = await searchService.search(q);
+        console.log(`Search for "${q}" returned ${results.length} results.`);
+        return results;
+      })().catch(error => {
         console.warn(`Search failed for alternative query "${q}":`, error.message);
         return [];
-      })
-    );
+      });
+    });
 
     const searchResultsList = await Promise.all(searchPromises);
 
@@ -120,6 +128,7 @@ Alternative Queries:`;
       }
     }
 
+    console.log(`Finished merging similar searches. Total unique results: ${mergedResults.length}`);
     return {
       similarQueries,
       results: mergedResults
