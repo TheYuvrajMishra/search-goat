@@ -20,7 +20,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       whileInView={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
       viewport={{ once: true, margin: "-100px" }}
       transition={{ duration: 1.2, ease: [0.32, 0.72, 0, 1] }}
-      className={`flex w-full ${isAssistant ? 'justify-start' : 'justify-end'}`}
+      className={`chat-message-container flex w-full ${isAssistant ? 'justify-start' : 'justify-end'}`}
     >
       <div className={`max-w-[100%] md:max-w-[90%] ${isAssistant ? 'w-full' : 'w-auto'}`}>
         {/* Editorial Meta Label */}

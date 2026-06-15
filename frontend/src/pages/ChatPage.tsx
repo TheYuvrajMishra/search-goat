@@ -31,8 +31,37 @@ const ChatPage: React.FC = () => {
   };
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages, isLoading]);
+    if (messages.length === 0) return;
+
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage.role === 'user') {
+      scrollToBottom();
+    } else {
+      // Scroll to the top of the newly generated assistant response
+      const timer = setTimeout(() => {
+        if (scrollContainerRef.current) {
+          const messageElements = scrollContainerRef.current.querySelectorAll('.chat-message-container');
+          const lastMessageElement = messageElements[messageElements.length - 1] as HTMLElement;
+          if (lastMessageElement) {
+            const container = scrollContainerRef.current;
+            const offsetTop = lastMessageElement.offsetTop;
+            const paddingOffset = window.innerWidth >= 768 ? 40 : 24;
+            container.scrollTo({
+              top: offsetTop - paddingOffset,
+              behavior: 'smooth'
+            });
+          }
+        }
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [messages]);
+
+  useEffect(() => {
+    if (isLoading) {
+      scrollToBottom();
+    }
+  }, [isLoading]);
 
   const handleSendMessage = async (query: string) => {
     const userMessage: Message = { role: 'user', content: query };
@@ -90,7 +119,7 @@ const ChatPage: React.FC = () => {
       <main className="relative z-10 flex-1 w-full overflow-hidden flex flex-col">
         <div 
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto scrollbar-hide px-6 md:px-16 lg:px-24 py-12 md:py-20"
+          className="relative flex-1 overflow-y-auto scrollbar-hide px-6 md:px-16 lg:px-24 py-12 md:py-20"
         >
           <div className="max-w-[1200px] mx-auto space-y-20 md:space-y-32">
             <AnimatePresence initial={false}>
