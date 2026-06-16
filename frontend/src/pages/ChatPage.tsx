@@ -266,6 +266,55 @@ const ChatPage: React.FC = () => {
             >
               <PiSidebarLight className="text-xl" />
             </button>
+
+            <div className="flex flex-col gap-1 min-w-0">
+              
+              {isEditingTitle ? (
+                <input
+                  type="text"
+                  value={titleValue}
+                  onChange={(e) => setTitleValue(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      if (titleValue.trim() !== '') {
+                        if (currentSessionId) {
+                          handleSessionRename(currentSessionId, titleValue.trim());
+                        } else {
+                          setPendingSessionTitle(titleValue.trim());
+                        }
+                      }
+                      setIsEditingTitle(false);
+                    } else if (e.key === 'Escape') {
+                      setIsEditingTitle(false);
+                      setTitleValue(currentSessionId ? sessionTitle : pendingSessionTitle);
+                    }
+                  }}
+                  onBlur={() => {
+                    if (titleValue.trim() !== '') {
+                      if (currentSessionId) {
+                        handleSessionRename(currentSessionId, titleValue.trim());
+                      } else {
+                        setPendingSessionTitle(titleValue.trim());
+                      }
+                    }
+                    setIsEditingTitle(false);
+                  }}
+                  autoFocus
+                  className="bg-[#1A1817]/[0.01] border border-[#1A1817]/15 rounded-lg px-2 py-0.5 text-[15px] sm:text-[16px] md:text-[18px] font-serif font-medium text-[#1A1817] outline-none focus:border-[#1A1817] focus:bg-white transition-all duration-300 w-[180px] sm:w-[260px] md:w-[320px]"
+                />
+              ) : (
+                <div 
+                  onClick={() => setIsEditingTitle(true)}
+                  className="group/title flex items-center gap-2 cursor-pointer min-w-0"
+                  title="Click to rename session"
+                >
+                  <h1 className="text-[16px] sm:text-[18px] md:text-[20px] font-serif font-medium tracking-tight text-[#1A1817] group-hover/title:text-emerald-800 transition-colors duration-300 truncate">
+                    {currentSessionId ? sessionTitle : pendingSessionTitle}
+                  </h1>
+                  <PiNotePencilLight className="text-xs text-[#1A1817]/30 opacity-0 group-hover/title:opacity-100 transition-all duration-300 flex-shrink-0" />
+                </div>
+              )}
+            </div>
           </motion.div>
         </header>
 
