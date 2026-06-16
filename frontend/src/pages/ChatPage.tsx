@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatMessage } from '../components/chat/ChatMessage';
 import { ChatInput } from '../components/chat/ChatInput';
-import { PiArrowCounterClockwiseLight, PiSidebarLight } from 'react-icons/pi';
+import { PiArrowCounterClockwiseLight, PiSidebarLight, PiNotePencilLight } from 'react-icons/pi';
 import { Sidebar } from '../components/layout/Sidebar';
 
 interface Message {
@@ -25,6 +25,18 @@ const ChatPage: React.FC = () => {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Session Title Editing State
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [pendingSessionTitle, setPendingSessionTitle] = useState('New Investigation');
+  const [titleValue, setTitleValue] = useState('');
+
+  const currentSession = sessions.find(s => s.id === currentSessionId);
+  const sessionTitle = currentSession ? currentSession.title : 'New Investigation';
+
+  useEffect(() => {
+    setTitleValue(currentSessionId ? sessionTitle : pendingSessionTitle);
+  }, [sessionTitle, currentSessionId, pendingSessionTitle]);
 
   // Load session history from MongoDB backend on mount
   const fetchSessions = async () => {
@@ -110,6 +122,7 @@ const ChatPage: React.FC = () => {
 
   const handleNewSession = () => {
     setCurrentSessionId(null);
+    setPendingSessionTitle('New Investigation');
     setMessages([
       {
         role: 'assistant',
@@ -186,7 +199,7 @@ const ChatPage: React.FC = () => {
         const sessionRes = await fetch('http://localhost:3000/sessions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ title: 'New Investigation' })
+          body: JSON.stringify({ title: pendingSessionTitle || 'New Investigation' })
         });
         const sessionData = await sessionRes.json();
         if (sessionData.success) {
@@ -238,68 +251,20 @@ const ChatPage: React.FC = () => {
       {/* Main Chat Content Area */}
       <div className="flex-1 h-full flex flex-col overflow-hidden">
         {/* Redesigned header/navbar with Mobile Sidebar Trigger */}
-        <header className="relative z-20 w-full py-4 md:py-6 px-6 md:px-16 lg:px-24 border-b border-[#1A1817]/[0.04] bg-[#FDFBF7]/70 backdrop-blur-xl flex items-center justify-between gap-4 shadow-[inset_0_-1px_0_rgba(26,24,23,0.01)]">
-          {/* Brand Column */}
+        <header className="relative md:hidden z-20 w-full py-4 md:py-6 px-6 md:px-16 lg:px-24 border-b border-[#1A1817]/[0.04] bg-[#FDFBF7]/70 backdrop-blur-xl flex items-center justify-between gap-4 shadow-[inset_0_-1px_0_rgba(26,24,23,0.01)]">
+          {/* Session Title Area */}
           <motion.div
             initial={{ opacity: 0, x: -20, filter: 'blur(10px)' }}
             animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
             transition={{ duration: 1.2, ease: [0.32, 0.72, 0, 1] }}
-            className="flex items-center gap-4"
+            className="flex items-center gap-4 min-w-0"
           >
             {/* Mobile Sidebar Trigger */}
             <button
               onClick={() => setIsSidebarOpen(true)}
-              className="md:hidden p-2 rounded-full hover:bg-[#1A1817]/5 text-[#1A1817]/60 hover:text-[#1A1817] transition-all duration-300 cursor-pointer"
+              className="md:hidden p-2 rounded-full hover:bg-[#1A1817]/5 text-[#1A1817]/60 hover:text-[#1A1817] transition-all duration-300 cursor-pointer flex-shrink-0"
             >
               <PiSidebarLight className="text-xl" />
-            </button>
-
-            <a href="/" className="group flex items-baseline gap-2">
-              <h1 className="text-[24px] sm:text-[28px] md:text-[32px] leading-none font-serif font-medium tracking-[-0.04em] text-[#1A1817]">
-                Search<span className="text-[#1A1817]/50 italic ml-[0.01em]">Goat</span>
-              </h1>
-              <span className="hidden sm:inline text-[8px] uppercase tracking-[0.3em] font-black text-[#1A1817]/30 group-hover:text-[#1A1817]/60 transition-colors duration-500">
-                v1.2
-              </span>
-            </a>
-          </motion.div>
-
-          {/* Editorial Navigation Linkage */}
-          <motion.nav
-            initial={{ opacity: 0, y: 10, filter: 'blur(10px)' }}
-            animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-            transition={{ duration: 1.2, delay: 0.1, ease: [0.32, 0.72, 0, 1] }}
-            className="hidden md:flex items-center gap-8 text-[11px] uppercase tracking-[0.4em] font-bold text-[#1A1817]/40"
-          >
-            <a href="#suite" className="hover:text-[#1A1817] transition-colors duration-500 relative py-1 after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-[#1A1817] after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-700">
-              Suite
-            </a>
-            <span className="w-1 h-1 rounded-full bg-[#1A1817]/10" />
-            <a href="#synthesis" className="hover:text-[#1A1817] transition-colors duration-500 relative py-1 after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-[#1A1817] after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-700">
-              Synthesis
-            </a>
-            <span className="w-1 h-1 rounded-full bg-[#1A1817]/10" />
-            <a href="#archives" className="hover:text-[#1A1817] transition-colors duration-500 relative py-1 after:absolute after:bottom-0 after:left-0 after:w-full after:h-[1px] after:bg-[#1A1817] after:scale-x-0 hover:after:scale-x-100 after:origin-left after:transition-transform after:duration-700">
-              Archives
-            </a>
-          </motion.nav>
-
-          {/* Control Suite / Actions */}
-          <motion.div
-            initial={{ opacity: 0, x: 20, filter: 'blur(10px)' }}
-            animate={{ opacity: 1, x: 0, filter: 'blur(0px)' }}
-            transition={{ duration: 1.2, delay: 0.2, ease: [0.32, 0.72, 0, 1] }}
-            className="flex items-center gap-4 md:gap-6"
-          >
-            {/* Reset Action */}
-            <button
-              onClick={handleResetSession}
-              disabled={messages.length <= 1 && !isLoading}
-              className="group flex items-center gap-2 px-3 py-2 md:px-5 md:py-2.5 rounded-full bg-[#1A1817] hover:bg-[#1A1817]/85 text-[#FDFBF7] disabled:bg-[#1A1817]/5 disabled:text-[#1A1817]/35 disabled:cursor-not-allowed border border-[#1A1817]/[0.05] transition-all duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] text-[10px] md:text-[11px] uppercase tracking-[0.2em] md:tracking-[0.3em] font-bold shadow-[0_10px_30px_rgba(26,24,23,0.05)] hover:shadow-[0_15px_35px_rgba(26,24,23,0.1)] active:scale-98 cursor-pointer"
-            >
-              <PiArrowCounterClockwiseLight className="text-sm group-hover:rotate-180 transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)]" />
-              <span className="hidden sm:inline">Reset Session</span>
-              <span className="sm:hidden">Reset</span>
             </button>
           </motion.div>
         </header>
