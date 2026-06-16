@@ -1,14 +1,24 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { PiArrowUpLight } from 'react-icons/pi';
+import { PiArrowUpLight, PiMapPinLight } from 'react-icons/pi';
+import { MapModal } from './MapModal';
 
 interface ChatInputProps {
   onSend: (message: string) => void;
+  onSendMaps?: (params: {
+    query: string;
+    minLat: number;
+    minLng: number;
+    maxLat: number;
+    maxLng: number;
+    limit: number;
+  }) => void;
   isLoading: boolean;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading }) => {
+export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onSendMaps, isLoading }) => {
   const [value, setValue] = useState('');
+  const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,7 +33,21 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading }) => {
       <form onSubmit={handleSubmit} className="relative group">
         {/* Double-Bezel Hard-Architecture: Editorial Input */}
         <div className="p-1.5 rounded-[2.5rem] md:rounded-[3rem] bg-[#F4F1EA] ring-1 ring-[#1A1817]/[0.05] shadow-[0_40px_100px_rgba(26,24,23,0.05)] transition-all duration-1000 ease-[cubic-bezier(0.32,0.72,0,1)] group-focus-within:shadow-[0_60px_120px_rgba(26,24,23,0.1)] group-focus-within:ring-[#1A1817]/[0.1]">
-          <div className="flex items-center gap-4 pl-6 pr-1.5 py-1.5 md:pl-8 md:pr-2 md:py-2 bg-[#FDFBF7] rounded-[calc(2.5rem-0.5rem)] md:rounded-[calc(3rem-0.375rem)] shadow-inner">
+          <div className="flex items-center gap-2 pl-3 md:pl-5 pr-1.5 py-1.5 md:pr-2 md:py-2 bg-[#FDFBF7] rounded-[calc(2.5rem-0.5rem)] md:rounded-[calc(3rem-0.375rem)] shadow-inner">
+            
+            {/* Map Picker trigger */}
+            {onSendMaps && (
+              <button
+                type="button"
+                onClick={() => setIsMapModalOpen(true)}
+                disabled={isLoading}
+                title="Open Map Lead Harvester"
+                className="p-2.5 rounded-full hover:bg-[#1A1817]/5 text-[#1A1817]/60 hover:text-[#1A1817] transition-all flex-shrink-0 cursor-pointer"
+              >
+                <PiMapPinLight className="text-xl md:text-2xl" />
+              </button>
+            )}
+
             <input
               type="text"
               value={value}
@@ -50,6 +74,17 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading }) => {
           </div>
         </div>
       </form>
+
+      <MapModal
+        isOpen={isMapModalOpen}
+        onClose={() => setIsMapModalOpen(false)}
+        initialQuery={value}
+        onInitiateScrape={(params) => {
+          if (onSendMaps) {
+            onSendMaps(params);
+          }
+        }}
+      />
     </div>
   );
 };

@@ -221,6 +221,77 @@ const ChatPage: React.FC = () => {
     }
   };
 
+  const handleSendMapsMessage = async (params: {
+    query: string;
+    minLat: number;
+    minLng: number;
+    maxLat: number;
+    maxLng: number;
+    limit: number;
+  }) => {
+    const userMessage: Message = { 
+      role: 'user', 
+      content: `Google Maps Scrape: Gather up to ${params.limit} listings for "${params.query}" within area [${params.minLat.toFixed(3)}, ${params.minLng.toFixed(3)} to ${params.maxLat.toFixed(3)}, ${params.maxLng.toFixed(3)}]` 
+    };
+    setMessages(prev => [...prev, userMessage]);
+    setIsLoading(true);
+
+    try {
+      let activeSessionId = currentSessionId;
+
+      if (!activeSessionId) {
+        const sessionRes = await fetch('http://localhost:3000/sessions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: pendingSessionTitle || 'New Investigation' })
+        });
+        const sessionData = await sessionRes.json();
+        if (sessionData.success) {
+          activeSessionId = sessionData.session._id;
+          setCurrentSessionId(activeSessionId);
+        }
+      }
+
+      const response = await fetch('http://localhost:3000/api/search/maps', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          query: params.query,
+          minLat: params.minLat,
+          minLng: params.minLng,
+          maxLat: params.maxLat,
+          maxLng: params.maxLng,
+          limit: params.limit,
+          sessionId: activeSessionId
+        })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        const assistantMessage: Message = {
+          role: 'assistant',
+          content: data.summary || `Extracted ${data.results?.length} business leads successfully.`,
+          results: data.results,
+          keywords: [params.query, 'google-maps', 'leads']
+        };
+        setMessages(prev => [...prev, assistantMessage]);
+        fetchSessions();
+      } else {
+        throw new Error(data.error || 'Maps lead harvesting failed.');
+      }
+    } catch (error: any) {
+      setMessages(prev => [...prev, {
+        role: 'assistant',
+        content: `Operational Impediment: ${error.message}`
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="relative h-[100dvh] w-full bg-[#FDFBF7] flex flex-row font-sans paper-grain overflow-hidden selection:bg-[#1A1817]/5 selection:text-[#1A1817]">
       <Sidebar 
@@ -346,7 +417,7 @@ const ChatPage: React.FC = () => {
         {/* PERSISTENT INPUT ISLAND */}
         <footer className="absolute bottom-0 left-0 right-0 z-30 w-full px-6 md:px-16 lg:px-24 pb-8 md:pb-12 pt-10 bg-gradient-to-t from-[#FDFBF7] via-[#FDFBF7]/90 to-transparent pointer-events-none">
           <div className="max-w-[900px] mx-auto pointer-events-auto">
-            <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
+            <ChatInput onSend={handleSendMessage} onSendMaps={handleSendMapsMessage} isLoading={isLoading} />
           </div>
         </footer>
       </div>

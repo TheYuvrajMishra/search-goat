@@ -347,6 +347,116 @@ class SearchController {
       });
     }
   }
+
+  /**
+   * Handler for Google Maps scraping and lead extraction.
+   * POST /api/search/maps
+   */
+  async handleMapsSearch(req, res) {
+    const startTime = Date.now();
+    const { query, minLat, minLng, maxLat, maxLng, limit, sessionId } = req.body;
+
+    if (!query) {
+      return res.status(400).json({
+        success: false,
+        error: 'Query parameter "query" is required.'
+      });
+    }
+    if (minLat === undefined || minLng === undefined || maxLat === undefined || maxLng === undefined) {
+      return res.status(400).json({
+        success: false,
+        error: 'Bounding box coordinates (minLat, minLng, maxLat, maxLng) are required.'
+      });
+    }
+
+    const scrapeLimit = parseInt(limit) || 15;
+
+    // Load or initialize MongoDB session
+    let session = null;
+    if (sessionId) {
+      const Session = require('../models/Session');
+      try {
+        session = await Session.findById(sessionId);
+        if (!session) {
+          session = new Session({ _id: sessionId });
+          await session.save();
+        }
+      } catch (e) {
+        session = new Session();
+        await session.save();
+      }
+    }
+
+    try {
+      const Message = require('../models/Message');
+      
+      // 1. Persist user query message
+      if (session) {
+        const userMsg = new Message({
+          sessionId: session._id,
+          role: 'user',
+          content: `Maps scrape for "${query}" inside selected area.`
+        });
+        await userMsg.save();
+      }
+
+      // 2. Perform maps scraping
+      console.log(`[MapsController] Starting scrape for query: "${query}" in bbox: [${minLat}, ${minLng}, ${maxLat}, ${maxLng}]`);
+      const mapsScraperService = require('../services/mapsScraperService');
+      const results = await mapsScraperService.scrapeMaps(query, minLat, minLng, maxLat, maxLng, scrapeLimit);
+
+      // 3. Format message content response
+      let summaryText = `I have successfully identified ${results.length} business listings matching "${query}" in the specified area. The contact details, ratings, and websites are compiled in the table below.`;
+      
+      if (results.length === 0) {
+        summaryText = `No business listings matching "${query}" were found in the selected map area. Please try expanding the search boundary or modifying the search terms.`;
+      }
+
+      // 4. Persist assistant message in database
+      if (session) {
+        const assistantMsg = new Message({
+          sessionId: session._id,
+          role: 'assistant',
+          content: summaryText,
+          results: results,
+          keywords: [query, 'google-maps', 'leads']
+        });
+        await assistantMsg.save();
+
+        // Generate session title if first exchange
+        const messageCount = await Message.countDocuments({ sessionId: session._id });
+        if (messageCount <= 2) {
+          session.title = `Maps: ${query}`;
+        }
+        session.updatedAt = Date.now();
+        await session.save();
+      }
+
+      const timeTakenMs = Date.now() - startTime;
+
+      return res.status(200).json({
+        success: true,
+        meta: {
+          query,
+          bbox: { minLat, minLng, maxLat, maxLng },
+          totalResults: results.length,
+          timeTakenMs,
+          timestamp: new Date().toISOString(),
+          sessionId: session ? session._id : undefined,
+          sessionTitle: session ? session.title : undefined
+        },
+        summary: summaryText,
+        results: results
+      });
+
+    } catch (error) {
+      console.error('Maps search controller error:', error);
+      return res.status(500).json({
+        success: false,
+        error: error.message
+      });
+    }
+  }
 }
 
 module.exports = new SearchController();

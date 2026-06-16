@@ -1,6 +1,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { ResultCard } from '../search/ResultCard';
+import { MapsResultTable } from '../search/MapsResultTable';
 
 interface ChatMessageProps {
   message: {
@@ -65,20 +66,28 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
 
                 {/* Source Intelligence - Physical Card Cascade */}
                 {message.results && message.results.length > 0 && (
-                  <div className="space-y-6 md:space-y-10">
-                    <div className="flex items-center gap-4 md:gap-8">
-                      <h5 className="text-[9px] md:text-[10px] uppercase tracking-[0.25em] md:tracking-[0.4em] font-black text-[#1A1817]/20 whitespace-nowrap">
-                        Documented Sources
-                      </h5>
-                      <div className="h-[1px] flex-1 bg-[#1A1817]/[0.03]" />
-                    </div>
-                    
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                      {message.results.slice(0, 10).map((res, i) => (
-                        <ResultCard key={i} result={res} index={i} />
-                      ))}
-                    </div>
-                  </div>
+                  (() => {
+                    const isMapsResults = 'name' in message.results[0] && 'address' in message.results[0];
+                    if (isMapsResults) {
+                      return <MapsResultTable businesses={message.results} />;
+                    }
+                    return (
+                      <div className="space-y-6 md:space-y-10">
+                        <div className="flex items-center gap-4 md:gap-8">
+                          <h5 className="text-[9px] md:text-[10px] uppercase tracking-[0.25em] md:tracking-[0.4em] font-black text-[#1A1817]/20 whitespace-nowrap">
+                            Documented Sources
+                          </h5>
+                          <div className="h-[1px] flex-1 bg-[#1A1817]/[0.03]" />
+                        </div>
+                        
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                          {message.results.slice(0, 10).map((res, i) => (
+                            <ResultCard key={i} result={res} index={i} />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()
                 )}
               </div>
             )}

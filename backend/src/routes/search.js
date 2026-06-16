@@ -98,4 +98,10 @@ router.get('/duckduckgo/summary', (req, res, next) => {
   next();
 }, searchController.handleSearch);
 
+/**
+ * Route: POST /api/search/maps
+ * Description: Scrapes Google Maps data for a given bounding box and search query.
+ */
+router.post('/maps', searchController.handleMapsSearch);
+
 module.exports = router;
