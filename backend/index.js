@@ -5,6 +5,7 @@ const connectDB = require('./src/config/db');
 const searchRouter = require('./src/routes/search');
 const sessionRouter = require('./src/routes/session');
 const featureRequestRouter = require('./src/routes/featureRequest');
+const reportRouter = require('./src/routes/report');
 const browserService = require('./src/services/browserService');
 
 // Connect to MongoDB
@@ -33,6 +34,8 @@ app.use('/api/sessions', sessionRouter);
 app.use('/sessions', sessionRouter);
 app.use('/api/features', featureRequestRouter);
 app.use('/features', featureRequestRouter);
+app.use('/api/report', reportRouter);
+app.use('/report', reportRouter);
 
 // Health check endpoint
 app.get('/status', (req, res) => {
