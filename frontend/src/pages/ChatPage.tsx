@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChatMessage } from '../components/chat/ChatMessage';
 import { ChatInput } from '../components/chat/ChatInput';
-import { PiArrowCounterClockwiseLight, PiSidebarLight, PiNotePencilLight } from 'react-icons/pi';
+import { PiSidebarLight, PiNotePencilLight } from 'react-icons/pi';
 import { Sidebar } from '../components/layout/Sidebar';
 
 interface Message {
@@ -131,20 +131,6 @@ const ChatPage: React.FC = () => {
     ]);
   };
 
-  const handleResetSession = async () => {
-    if (currentSessionId) {
-      try {
-        await fetch(`http://localhost:3000/sessions/${currentSessionId}`, {
-          method: 'DELETE'
-        });
-        fetchSessions();
-      } catch (e) {
-        console.error('Failed to reset session:', e);
-      }
-    }
-    handleNewSession();
-  };
-
   const scrollToBottom = () => {
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
@@ -249,7 +235,7 @@ const ChatPage: React.FC = () => {
       />
 
       {/* Main Chat Content Area */}
-      <div className="flex-1 h-full flex flex-col overflow-hidden">
+      <div className="flex-1 h-full flex flex-col overflow-hidden relative">
         {/* Redesigned header/navbar with Mobile Sidebar Trigger */}
         <header className="relative md:hidden z-20 w-full py-4 md:py-6 px-6 md:px-16 lg:px-24 border-b border-[#1A1817]/[0.04] bg-[#FDFBF7]/70 backdrop-blur-xl flex items-center justify-between gap-4 shadow-[inset_0_-1px_0_rgba(26,24,23,0.01)]">
           {/* Session Title Area */}
@@ -322,7 +308,7 @@ const ChatPage: React.FC = () => {
         <main className="relative z-10 flex-1 w-full overflow-hidden flex flex-col">
           <div 
             ref={scrollContainerRef}
-            className="relative flex-1 overflow-y-auto scrollbar-hide px-6 md:px-16 lg:px-24 py-12 md:py-20"
+            className="relative flex-1 overflow-y-auto scrollbar-hide px-6 md:px-16 lg:px-24 pt-12 pb-32 md:pt-20 md:pb-48"
           >
             <div className="max-w-[1200px] mx-auto space-y-20 md:space-y-32">
               <AnimatePresence initial={false}>
@@ -358,7 +344,7 @@ const ChatPage: React.FC = () => {
         </main>
 
         {/* PERSISTENT INPUT ISLAND */}
-        <footer className="relative z-30 w-full px-6 md:px-16 lg:px-24 pb-8 md:pb-12 pt-10 bg-gradient-to-t from-[#FDFBF7] via-[#FDFBF7]/95 to-transparent pointer-events-none">
+        <footer className="absolute bottom-0 left-0 right-0 z-30 w-full px-6 md:px-16 lg:px-24 pb-8 md:pb-12 pt-10 bg-gradient-to-t from-[#FDFBF7] via-[#FDFBF7]/90 to-transparent pointer-events-none">
           <div className="max-w-[900px] mx-auto pointer-events-auto">
             <ChatInput onSend={handleSendMessage} isLoading={isLoading} />
           </div>
