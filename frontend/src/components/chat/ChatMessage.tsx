@@ -23,13 +23,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
       className={`chat-message-container flex w-full ${isAssistant ? 'justify-start' : 'justify-end'}`}
     >
       <div className={`max-w-[100%] md:max-w-[90%] ${isAssistant ? 'w-full' : 'w-auto'}`}>
-        {/* Editorial Meta Label */}
-        <div className={`flex items-center gap-6 mb-8 ${isAssistant ? 'justify-start' : 'justify-end'}`}>
-          <div className="h-[1px] w-12 bg-[#1A1817]/10" />
-          <span className="text-[11px] uppercase tracking-[0.4em] font-bold text-[#1A1817]/40 italic">
-            {isAssistant ? 'Analysis Suite' : 'Inquiry Vol. I'}
-          </span>
-        </div>
 
         {/* Double-Bezel Hard-Architecture Container */}
         <div className={`
