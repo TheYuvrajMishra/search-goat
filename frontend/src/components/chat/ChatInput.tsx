@@ -42,7 +42,7 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, isLoading }) => {
                 relative group/btn flex items-center justify-center w-12 h-12 rounded-full transition-all duration-1000 ease-[cubic-bezier(0.32,0.72,0,1)]
                 ${value.trim() && !isLoading 
                   ? 'bg-[#1A1817] text-[#FDFBF7] shadow-2xl hover:scale-105' 
-                  : 'bg-[#1A1817]/[0.02] text-[#1A1817]/10'}
+                  : 'bg-[#1A1817]/[0.1] text-[#fff]'}
               `}
             >
               <PiArrowUpLight className={`text-2xl transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${value.trim() ? 'group-hover/btn:-translate-y-1.5' : ''}`} />
