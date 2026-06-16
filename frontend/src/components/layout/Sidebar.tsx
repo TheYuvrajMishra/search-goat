@@ -152,16 +152,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Sidebar Header with Subheading Pill & Actions */}
         <div className="flex items-center justify-between pb-6 border-b border-[#1A1817]/[0.05]">
           <div className="flex flex-col gap-1.5">
-            <span className="w-max rounded-full px-2 py-0.5 bg-[#1A1817]/[0.03] border border-[#1A1817]/[0.05] text-[7.5px] uppercase tracking-[0.2em] font-black text-[#1A1817]/50">
-              Session Desk
-            </span>
             <div className="flex items-baseline gap-2">
               <h2 className="text-[20px] sm:text-[22px] leading-none font-serif font-medium tracking-[-0.04em] text-[#1A1817]">
                 Search<span className="text-[#1A1817]/50 italic ml-[0.01em]">Goat</span>
               </h2>
-              <span className="text-[8px] uppercase tracking-[0.2em] font-black text-[#1A1817]/30 mt-1">
-                Hub
-              </span>
             </div>
           </div>
           
@@ -187,7 +181,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {/* Intelligence Histories */}
         <div className="flex flex-col gap-4">
           <h3 className="text-[9px] uppercase tracking-[0.3em] font-black text-[#1A1817]/30">
-            Archives & Syntheses
+            Recent Chats
           </h3>
           <motion.div 
             variants={containerVariants}
