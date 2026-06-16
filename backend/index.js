@@ -4,6 +4,7 @@ const cors = require('cors');
 const connectDB = require('./src/config/db');
 const searchRouter = require('./src/routes/search');
 const sessionRouter = require('./src/routes/session');
+const featureRequestRouter = require('./src/routes/featureRequest');
 const browserService = require('./src/services/browserService');
 
 // Connect to MongoDB
@@ -30,6 +31,8 @@ app.use('/api/search', searchRouter);
 app.use('/search', searchRouter);
 app.use('/api/sessions', sessionRouter);
 app.use('/sessions', sessionRouter);
+app.use('/api/features', featureRequestRouter);
+app.use('/features', featureRequestRouter);
 
 // Health check endpoint
 app.get('/status', (req, res) => {
