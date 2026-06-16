@@ -38,8 +38,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
               : 'p-4 md:p-6 bg-[#FDFBF7] rounded-[calc(2rem-0.25rem)] md:rounded-[calc(2.5rem-0.375rem)] shadow-[inset_0_1px_1px_rgba(26,24,23,0.02)]'}
           `}>
             <div className={`
-              text-[15px] md:text-[16px] lg:text-[18px] leading-[1.5] text-[#1A1817] font-medium tracking-tight whitespace-pre-wrap
-              ${isAssistant ? 'font-serif text-[20px] sm:text-[24px] md:text-[30px] lg:text-[36px] leading-[1.3] text-[#1A1817]/90 font-medium' : ''}
+              whitespace-pre-wrap font-medium tracking-tight
+              ${isAssistant 
+                ? 'font-serif text-[16px] sm:text-[18px] md:text-[20px] lg:text-[24px] leading-[1.35] text-[#1A1817]/90' 
+                : 'text-[13px] md:text-[14px] lg:text-[15px] leading-[1.5] text-[#1A1817]'}
             `}>
               {message.content}
             </div>
@@ -53,7 +55,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                     {message.keywords.map((kw, i) => (
                       <span 
                         key={i} 
-                        className="px-3.5 py-1 md:px-4 md:py-1.5 rounded-full bg-[#1A1817]/[0.03] border border-[#1A1817]/[0.05] text-[10px] md:text-[11px] text-[#1A1817]/80 font-bold tracking-widest hover:bg-[#1A1817] hover:text-[#FDFBF7] transition-all duration-700 cursor-default uppercase"
+                        className="px-3.5 py-1 md:px-4 md:py-1.5 rounded-full bg-[#1A1817]/[0.03] border border-[#1A1817]/[0.05] text-[9px] md:text-[10px] text-[#1A1817]/80 font-bold tracking-widest hover:bg-[#1A1817] hover:text-[#FDFBF7] transition-all duration-700 cursor-default uppercase"
                       >
                         {kw}
                       </span>
@@ -65,7 +67,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
                 {message.results && message.results.length > 0 && (
                   <div className="space-y-6 md:space-y-10">
                     <div className="flex items-center gap-4 md:gap-8">
-                      <h5 className="text-[10px] md:text-[11px] uppercase tracking-[0.25em] md:tracking-[0.4em] font-black text-[#1A1817]/20 whitespace-nowrap">
+                      <h5 className="text-[9px] md:text-[10px] uppercase tracking-[0.25em] md:tracking-[0.4em] font-black text-[#1A1817]/20 whitespace-nowrap">
                         Documented Sources
                       </h5>
                       <div className="h-[1px] flex-1 bg-[#1A1817]/[0.03]" />
