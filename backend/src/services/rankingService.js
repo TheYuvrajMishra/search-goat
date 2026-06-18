@@ -6,9 +6,11 @@ class RankingService {
    * and filters out irrelevant results, returning at most the top 10.
    * @param {string} query The user's original query
    * @param {Array<Object>} results The list of results to rank
+   * @param {Object} options
    * @returns {Promise<Array<Object>>} The top 10 ranked and filtered results
    */
-  async rankResults(query, results) {
+  async rankResults(query, results, options = {}) {
+    const { signal } = options;
     if (!results || results.length === 0) {
       return [];
     }
@@ -41,6 +43,7 @@ Top Relevant IDs:`;
 
       const response = await fetch(`${llmService.baseUrl}/chat/completions`, {
         method: 'POST',
+        signal, // Connect abort signal to fetch call
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${llmService.apiKey}`
@@ -88,6 +91,10 @@ Top Relevant IDs:`;
       console.log(`LLM successfully ranked and filtered results. Returning ${rankedResults.length} items.`);
       return rankedResults;
     } catch (error) {
+      if (error.name === 'AbortError' || signal?.aborted) {
+        console.log('Ranking aborted by user.');
+        throw error;
+      }
       console.error('Ranking Service Error:', error);
       // Fallback: Return first 10 organic results if ranking fails
       return results.slice(0, 10);

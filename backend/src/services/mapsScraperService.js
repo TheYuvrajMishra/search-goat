@@ -87,10 +87,33 @@ class MapsScraperService {
    * @param {number} limit Maximum business listings to scrape (defaults to 15)
    * @returns {Promise<Array<Object>>} Scraped business listings
    */
-  async scrapeMaps(query, minLat, minLng, maxLat, maxLng, limit = 15) {
+  async scrapeMaps(query, minLat, minLng, maxLat, maxLng, limit = 15, options = {}) {
+    const { signal } = options;
     let page;
     try {
-      page = await browserService.createPage();
+      if (signal?.aborted) {
+        throw new Error('Maps scraping aborted by user');
+      }
+
+      // Block images, media, and fonts to avoid loading map tiles, saving massive network and CPU load
+      page = await browserService.createPage({
+        blockImages: true,
+        blockMedia: true,
+        blockFonts: true,
+        blockStylesheets: false // Maps requires stylesheets to render layouts correctly
+      });
+
+      if (signal) {
+        signal.addEventListener('abort', () => {
+          if (page) {
+            console.log('[MapsScraper] Aborting scraper page due to client signal...');
+            page.close().catch(err => console.error('[MapsScraper] Error aborting page:', err.message));
+          }
+        });
+        if (signal.aborted) {
+          throw new Error('Maps scraping aborted by user');
+        }
+      }
       
       // Calculate map center coordinate
       const centerLat = (parseFloat(minLat) + parseFloat(maxLat)) / 2;
@@ -101,6 +124,8 @@ class MapsScraperService {
       console.log(`[MapsScraper] Navigating to Google Maps search: ${searchUrl}`);
       
       await page.goto(searchUrl, { waitUntil: 'domcontentloaded' });
+
+      if (signal?.aborted) throw new Error('Maps scraping aborted by user');
 
       // Check if page redirected straight to a single business page (maps/place/)
       const currentUrl = page.url();
@@ -130,6 +155,8 @@ class MapsScraperService {
 
           // Scroll feed until we reach the limit or the end of the list
           while (scrollAttempts < 10) {
+            if (signal?.aborted) throw new Error('Maps scraping aborted by user');
+
             currentCount = await page.evaluate((sel) => {
               return document.querySelectorAll(`${sel} a[href*="/maps/place/"]`).length;
             }, feedSelector);
@@ -161,14 +188,32 @@ class MapsScraperService {
 
             if (currentHeight === prevHeight) {
               scrollAttempts++;
-              await new Promise(resolve => setTimeout(resolve, 1500));
+              await new Promise((resolve, reject) => {
+                const timeout = setTimeout(resolve, 1500);
+                if (signal) {
+                  signal.addEventListener('abort', () => {
+                    clearTimeout(timeout);
+                    reject(new Error('Scraping aborted'));
+                  });
+                }
+              });
             } else {
               scrollAttempts = 0;
               prevHeight = currentHeight;
-              await new Promise(resolve => setTimeout(resolve, 1000));
+              await new Promise((resolve, reject) => {
+                const timeout = setTimeout(resolve, 1000);
+                if (signal) {
+                  signal.addEventListener('abort', () => {
+                    clearTimeout(timeout);
+                    reject(new Error('Scraping aborted'));
+                  });
+                }
+              });
             }
           }
         }
+
+        if (signal?.aborted) throw new Error('Maps scraping aborted by user');
 
         // Collect all matching place detail URLs
         placeUrls = await page.evaluate(() => {
@@ -186,10 +231,13 @@ class MapsScraperService {
 
       // Iterate through each business page to scrape individual details
       for (const placeUrl of selectedUrls) {
+        if (signal?.aborted) throw new Error('Maps scraping aborted by user');
         console.log(`[MapsScraper] Navigating to place details: ${placeUrl}`);
         try {
           await page.goto(placeUrl, { waitUntil: 'domcontentloaded' });
           await page.waitForSelector('h1.DUwDvf', { timeout: 10000 });
+
+          if (signal?.aborted) throw new Error('Maps scraping aborted by user');
 
           const details = await page.evaluate(() => {
             const nameEl = document.querySelector('h1.DUwDvf');
@@ -293,16 +341,19 @@ class MapsScraperService {
           });
 
         } catch (err) {
+          if (signal?.aborted) throw new Error('Maps scraping aborted by user');
           console.error(`[MapsScraper] Error scraping details for ${placeUrl}:`, err.message);
         }
       }
 
+      if (signal?.aborted) throw new Error('Maps scraping aborted by user');
       console.log(`[MapsScraper] Finished details scraping. Crawling website emails in parallel...`);
       
-      // Concurrently crawl websites for email contacts
+      // Concurrently crawl websites for email contacts, respecting the signal
       const emailCrawls = businesses.map(async (biz) => {
         if (biz.website) {
           try {
+            if (signal?.aborted) return;
             const emails = await this.crawlWebsiteForEmails(biz.website);
             biz.emails = emails;
           } catch (e) {

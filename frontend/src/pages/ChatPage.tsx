@@ -25,6 +25,16 @@ const ChatPage: React.FC = () => {
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const handleStopResponse = () => {
+    if (abortControllerRef.current) {
+      console.log('User cancelled operation. Aborting request.');
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setIsLoading(false);
+  };
 
   // Session Title Editing State
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -177,13 +187,18 @@ const ChatPage: React.FC = () => {
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
       let activeSessionId = currentSessionId;
 
       // Create new session in MongoDB if not already established
       if (!activeSessionId) {
+        if (controller.signal.aborted) return;
         const sessionRes = await fetch('http://localhost:3000/sessions', {
           method: 'POST',
+          signal: controller.signal,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title: pendingSessionTitle || 'New Investigation' })
         });
@@ -194,7 +209,12 @@ const ChatPage: React.FC = () => {
         }
       }
 
-      const response = await fetch(`http://localhost:3000/search/q?query=${encodeURIComponent(query)}${activeSessionId ? `&sessionId=${activeSessionId}` : ''}`);
+      if (controller.signal.aborted) return;
+
+      const response = await fetch(
+        `http://localhost:3000/search/q?query=${encodeURIComponent(query)}${activeSessionId ? `&sessionId=${activeSessionId}` : ''}`,
+        { signal: controller.signal }
+      );
       const data = await response.json();
 
       if (data.success) {
@@ -212,12 +232,22 @@ const ChatPage: React.FC = () => {
         throw new Error(data.error || 'Intelligence link severed.');
       }
     } catch (error: any) {
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: `Operational Impediment: ${error.message}`
-      }]);
+      if (error.name === 'AbortError') {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: 'Synthesis halted by user. Operational stream severed.'
+        }]);
+      } else {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `Operational Impediment: ${error.message}`
+        }]);
+      }
     } finally {
       setIsLoading(false);
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
   };
 
@@ -236,12 +266,17 @@ const ChatPage: React.FC = () => {
     setMessages(prev => [...prev, userMessage]);
     setIsLoading(true);
 
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
     try {
       let activeSessionId = currentSessionId;
 
       if (!activeSessionId) {
+        if (controller.signal.aborted) return;
         const sessionRes = await fetch('http://localhost:3000/sessions', {
           method: 'POST',
+          signal: controller.signal,
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ title: pendingSessionTitle || 'New Investigation' })
         });
@@ -252,8 +287,11 @@ const ChatPage: React.FC = () => {
         }
       }
 
+      if (controller.signal.aborted) return;
+
       const response = await fetch('http://localhost:3000/api/search/maps', {
         method: 'POST',
+        signal: controller.signal,
         headers: {
           'Content-Type': 'application/json'
         },
@@ -283,12 +321,22 @@ const ChatPage: React.FC = () => {
         throw new Error(data.error || 'Maps lead harvesting failed.');
       }
     } catch (error: any) {
-      setMessages(prev => [...prev, {
-        role: 'assistant',
-        content: `Operational Impediment: ${error.message}`
-      }]);
+      if (error.name === 'AbortError') {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: 'Maps harvesting halted by user. Operational stream severed.'
+        }]);
+      } else {
+        setMessages(prev => [...prev, {
+          role: 'assistant',
+          content: `Operational Impediment: ${error.message}`
+        }]);
+      }
     } finally {
       setIsLoading(false);
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+      }
     }
   };
 
@@ -417,7 +465,12 @@ const ChatPage: React.FC = () => {
         {/* PERSISTENT INPUT ISLAND */}
         <footer className="absolute bottom-0 left-0 right-0 z-30 w-full px-6 md:px-16 lg:px-24 pb-8 md:pb-12 pt-10 bg-gradient-to-t from-[#FDFBF7] via-[#FDFBF7]/90 to-transparent pointer-events-none">
           <div className="max-w-[900px] mx-auto pointer-events-auto">
-            <ChatInput onSend={handleSendMessage} onSendMaps={handleSendMapsMessage} isLoading={isLoading} />
+            <ChatInput 
+              onSend={handleSendMessage} 
+              onSendMaps={handleSendMapsMessage} 
+              onStop={handleStopResponse} 
+              isLoading={isLoading} 
+            />
           </div>
         </footer>
       </div>

@@ -4,9 +4,11 @@ class KeywordService {
   /**
    * Converts a user query into 5 relevant search keywords/phrases using the LLM.
    * @param {string} query The raw user query
+   * @param {Object} options
    * @returns {Promise<string[]>} An array of exactly 5 keywords
    */
-  async generateKeywords(query) {
+  async generateKeywords(query, options = {}) {
+    const { signal } = options;
     if (!query || query.trim().length === 0) {
       return [];
     }
@@ -23,6 +25,7 @@ Keywords:`;
 
       const response = await fetch(`${llmService.baseUrl}/chat/completions`, {
         method: 'POST',
+        signal, // Connect abort signal to fetch call
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${llmService.apiKey}`
@@ -74,6 +77,10 @@ Keywords:`;
 
       return keywords.slice(0, 5);
     } catch (error) {
+      if (error.name === 'AbortError' || signal?.aborted) {
+        console.log('Keyword generation aborted by user.');
+        throw error;
+      }
       console.error('Keyword Service Error:', error);
       // Clean fallback: split the query into words, removing short/stop words
       return query

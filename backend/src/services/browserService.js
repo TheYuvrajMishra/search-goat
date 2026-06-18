@@ -25,7 +25,7 @@ class BrowserService {
 
     this.isLaunching = true;
     try {
-      console.log('Launching Puppeteer Chrome browser...');
+      console.log('Launching Puppeteer Chrome browser with conservative flags...');
       this.browser = await puppeteer.launch({
         headless: true,
         args: [
@@ -34,8 +34,41 @@ class BrowserService {
           '--disable-dev-shm-usage',
           '--disable-accelerated-2d-canvas',
           '--disable-gpu',
-          '--window-size=1920,1080',
-          '--mute-audio'
+          '--window-size=1280,800', // Sized down to save buffer memory
+          '--mute-audio',
+          
+          // Resource & Backgrounding Optimization Flags:
+          '--disable-background-networking',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-breakpad',
+          '--disable-client-side-phishing-detection',
+          '--disable-component-update',
+          '--disable-default-apps',
+          '--disable-domain-reliability',
+          '--disable-extensions',
+          '--disable-features=AudioServiceOutOfProcess,Translate,BackForwardCache,AcceptCHFrame,AvoidUnnecessaryTemplates',
+          '--disable-hang-monitor',
+          '--disable-ipc-flooding-protection',
+          '--disable-notifications',
+          '--disable-offer-store-unmasked-wallet-cards',
+          '--disable-popup-blocking',
+          '--disable-print-preview',
+          '--disable-prompt-on-repost',
+          '--disable-renderer-backgrounding',
+          '--disable-speech-api',
+          '--disable-sync',
+          '--hide-scrollbars',
+          '--ignore-gpu-blacklist',
+          '--metrics-recording-only',
+          '--no-default-browser-check',
+          '--no-first-run',
+          '--no-pings',
+          '--password-store=basic',
+          '--use-mock-keychain',
+          
+          // V8 Engine Limits:
+          '--js-flags=--max-old-space-size=256' // Limits tab RAM to 256MB
         ]
       });
 
@@ -57,9 +90,9 @@ class BrowserService {
 
   /**
    * Creates a new page with pre-configured settings (custom user agent, viewport, headers)
-   * to avoid detection.
+   * and selectively blocks non-essential resources to conserve system capacity.
    */
-  async createPage() {
+  async createPage(options = {}) {
     const browser = await this.getBrowser();
     const page = await browser.newPage();
     
@@ -75,19 +108,36 @@ class BrowserService {
     await page.setDefaultNavigationTimeout(30000);
     await page.setDefaultTimeout(30000);
 
-    // Commented out request interception to prevent detection.
-    // Blocking resources like images/fonts is a high-signal footprint that Google detects as an automated scraper.
-    /*
-    await page.setRequestInterception(true);
-    page.on('request', (req) => {
-      const resourceType = req.resourceType();
-      if (['image', 'media', 'font'].includes(resourceType)) {
-        req.abort();
-      } else {
-        req.continue();
-      }
-    });
-    */
+    // Dynamic resource blocking options
+    const {
+      blockImages = true,
+      blockMedia = true,
+      blockFonts = true,
+      blockStylesheets = false // Defaults to false; search can set it to true
+    } = options;
+
+    if (blockImages || blockMedia || blockFonts || blockStylesheets) {
+      await page.setRequestInterception(true);
+      page.on('request', (req) => {
+        const type = req.resourceType();
+        const url = req.url();
+
+        const shouldBlock = 
+          (blockImages && type === 'image') ||
+          (blockMedia && type === 'media') ||
+          (blockFonts && type === 'font') ||
+          (blockStylesheets && type === 'stylesheet') ||
+          url.includes('analytics') ||
+          url.includes('doubleclick') ||
+          url.includes('google-analytics.com');
+
+        if (shouldBlock) {
+          req.abort();
+        } else {
+          req.continue();
+        }
+      });
+    }
 
     return page;
   }

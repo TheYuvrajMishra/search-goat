@@ -13,10 +13,11 @@ interface ChatInputProps {
     maxLng: number;
     limit: number;
   }) => void;
+  onStop?: () => void;
   isLoading: boolean;
 }
 
-export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onSendMaps, isLoading }) => {
+export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onSendMaps, onStop, isLoading }) => {
   const [value, setValue] = useState('');
   const [isMapModalOpen, setIsMapModalOpen] = useState(false);
 
@@ -57,20 +58,33 @@ export const ChatInput: React.FC<ChatInputProps> = ({ onSend, onSendMaps, isLoad
               className="flex-1 bg-transparent border-none outline-none text-[16px] font-medium tracking-tight placeholder:text-[#1A1817]/20 text-[#1A1817] selection:bg-[#1A1817]/5"
             />
             
-            {/* Vanguard Button-in-Button Trailing Icon CTA */}
-            <motion.button
-              type="submit"
-              disabled={!value.trim() || isLoading}
-              whileTap={{ scale: 0.94 }}
-              className={`
-                relative group/btn flex items-center justify-center w-12 h-12 rounded-full transition-all duration-1000 ease-[cubic-bezier(0.32,0.72,0,1)]
-                ${value.trim() && !isLoading 
-                  ? 'bg-[#1A1817] text-[#FDFBF7] shadow-2xl hover:scale-105' 
-                  : 'bg-[#1A1817]/[0.1] text-[#fff]'}
-              `}
-            >
-              <PiArrowUpLight className={`text-2xl transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${value.trim() ? 'group-hover/btn:-translate-y-1.5' : ''}`} />
-            </motion.button>
+            {/* Vanguard Button-in-Button Trailing Icon CTA / Stop Button */}
+            {isLoading && onStop ? (
+              <motion.button
+                type="button"
+                onClick={onStop}
+                whileTap={{ scale: 0.94 }}
+                title="Stop response"
+                className="relative group/btn flex items-center justify-center w-12 h-12 rounded-full bg-[#1A1817] hover:bg-red-800 text-[#FDFBF7] shadow-2xl hover:scale-105 transition-all duration-300 cursor-pointer"
+              >
+                {/* Square Stop Icon */}
+                <div className="w-3.5 h-3.5 bg-[#FDFBF7] rounded-[2px]" />
+              </motion.button>
+            ) : (
+              <motion.button
+                type="submit"
+                disabled={!value.trim() || isLoading}
+                whileTap={{ scale: 0.94 }}
+                className={`
+                  relative group/btn flex items-center justify-center w-12 h-12 rounded-full transition-all duration-1000 ease-[cubic-bezier(0.32,0.72,0,1)]
+                  ${value.trim() && !isLoading 
+                    ? 'bg-[#1A1817] text-[#FDFBF7] shadow-2xl hover:scale-105' 
+                    : 'bg-[#1A1817]/[0.1] text-[#fff]'}
+                `}
+              >
+                <PiArrowUpLight className={`text-2xl transition-transform duration-700 ease-[cubic-bezier(0.32,0.72,0,1)] ${value.trim() ? 'group-hover/btn:-translate-y-1.5' : ''}`} />
+              </motion.button>
+            )}
           </div>
         </div>
       </form>

@@ -24,13 +24,22 @@ class SearchController {
       });
     }
 
+    const abortController = new AbortController();
+    res.on('close', () => {
+      if (!res.writableEnded) {
+        console.log(`[SearchController] Client disconnected. Aborting top results search for: "${query}"`);
+        abortController.abort();
+      }
+    });
+    const signal = abortController.signal;
+
     try {
       // 1. Fetch a broad set of results using Similar Search
       console.log(`Fetching broad result pool for ranking: "${query}"...`);
-      const { similarQueries, results } = await similarSearchService.searchSimilar(query, engine);
+      const { similarQueries, results } = await similarSearchService.searchSimilar(query, engine, { signal });
 
       // 2. Rank and filter results using the LLM Ranking Service
-      const rankedResults = await rankingService.rankResults(query, results);
+      const rankedResults = await rankingService.rankResults(query, results, { signal });
 
       // 3. Extract domains and map ranks for the final top 10
       const formattedResults = rankedResults.map((item, index) => {
@@ -69,6 +78,16 @@ class SearchController {
         results: formattedResults
       });
     } catch (error) {
+      if (signal?.aborted || error.name === 'AbortError' || error.message.includes('aborted')) {
+        console.log(`[SearchController] Top results search aborted for query: "${query}"`);
+        if (!res.writableEnded) {
+          return res.status(499).json({
+            success: false,
+            error: 'Request aborted by user'
+          });
+        }
+        return;
+      }
       console.error('Top results controller error:', error);
       const isRateLimit = error.message.includes('429') || error.message.includes('CAPTCHA');
       const statusCode = isRateLimit ? 429 : 500;
@@ -90,7 +109,7 @@ class SearchController {
     
     // Support query in param, q, or query query-string parameters
     const query = req.query.q || req.query.query || req.params.query;
-    const sessionId = req.query.sessionId || req.query.session_id || req.body.sessionId;
+    const sessionId = req.query.sessionId || req.query.session_id || req.body?.sessionId;
     
     // Default engine is 'duckduckgo' (primary)
     const engine = (req.query.engine || 'duckduckgo').toLowerCase();
@@ -109,6 +128,15 @@ class SearchController {
       });
     }
 
+    const abortController = new AbortController();
+    res.on('close', () => {
+      if (!res.writableEnded) {
+        console.log(`[SearchController] Client disconnected. Aborting search for: "${query}"`);
+        abortController.abort();
+      }
+    });
+    const signal = abortController.signal;
+
     // Load or initialize MongoDB session
     let session = null;
     if (sessionId) {
@@ -126,6 +154,8 @@ class SearchController {
     }
 
     try {
+      if (signal?.aborted) throw new Error('Search aborted by user');
+
       // Persist user query message
       if (session) {
         const userMsg = new Message({
@@ -138,7 +168,7 @@ class SearchController {
 
       // Run keywords generation concurrently if requested
       const keywordsPromise = includeKeywords 
-        ? keywordService.generateKeywords(query) 
+        ? keywordService.generateKeywords(query, { signal }) 
         : Promise.resolve(null);
 
       let results = [];
@@ -146,14 +176,14 @@ class SearchController {
 
       if (useSimilar) {
         console.log(`Executing default Similar Search for: "${query}" using ${engine}...`);
-        const similarData = await similarSearchService.searchSimilar(query, engine);
+        const similarData = await similarSearchService.searchSimilar(query, engine, { signal });
         results = similarData.results;
         similarQueries = similarData.similarQueries;
       } else {
         if (engine === 'google') {
-          results = await googleService.search(query);
+          results = await googleService.search(query, { signal });
         } else if (engine === 'duckduckgo' || engine === 'ddg') {
-          results = await duckduckgoService.search(query);
+          results = await duckduckgoService.search(query, { signal });
         } else {
           return res.status(400).json({
             success: false,
@@ -162,9 +192,11 @@ class SearchController {
         }
       }
 
+      if (signal?.aborted) throw new Error('Search aborted by user');
+
       // Apply LLM ranking and filtering if enabled (default)
       if (useRanking && results.length > 0) {
-        results = await rankingService.rankResults(query, results);
+        results = await rankingService.rankResults(query, results, { signal });
       }
 
       // Format search items and extract metadata
@@ -189,13 +221,17 @@ class SearchController {
         };
       });
 
+      if (signal?.aborted) throw new Error('Search aborted by user');
+
       // Fetch keywords and generate LLM summary concurrently if possible
       const [keywords, summary] = await Promise.all([
         keywordsPromise,
         (summarize && formattedResults.length > 0) 
-          ? llmService.generateSummary(query, formattedResults) 
+          ? llmService.generateSummary(query, formattedResults, { signal }) 
           : Promise.resolve(null)
       ]);
+
+      if (signal?.aborted) throw new Error('Search aborted by user');
 
       // Persist assistant message and perform LLM title generation
       if (session) {
@@ -212,7 +248,7 @@ class SearchController {
         const messageCount = await Message.countDocuments({ sessionId: session._id });
         if (messageCount <= 2) {
           try {
-            const generatedTitle = await llmService.generateTitle(query);
+            const generatedTitle = await llmService.generateTitle(query, { signal });
             session.title = generatedTitle;
           } catch (err) {
             console.error('LLM Title generation failed:', err);
@@ -243,6 +279,16 @@ class SearchController {
         results: formattedResults
       });
     } catch (error) {
+      if (signal?.aborted || error.name === 'AbortError' || error.message.includes('aborted')) {
+        console.log(`[SearchController] Search aborted for query: "${query}"`);
+        if (!res.writableEnded) {
+          return res.status(499).json({
+            success: false,
+            error: 'Request aborted by user'
+          });
+        }
+        return;
+      }
       console.error('Search controller error:', error);
       const isRateLimit = error.message.includes('429') || error.message.includes('CAPTCHA');
       const statusCode = isRateLimit ? 429 : 500;
@@ -298,8 +344,17 @@ class SearchController {
       });
     }
 
+    const abortController = new AbortController();
+    res.on('close', () => {
+      if (!res.writableEnded) {
+        console.log(`[SearchController] Client disconnected. Aborting similar search for: "${query}"`);
+        abortController.abort();
+      }
+    });
+    const signal = abortController.signal;
+
     try {
-      const { similarQueries, results } = await similarSearchService.searchSimilar(query, engine);
+      const { similarQueries, results } = await similarSearchService.searchSimilar(query, engine, { signal });
 
       // Extract domains and map ranks
       const formattedResults = results.map((item, index) => {
@@ -337,6 +392,16 @@ class SearchController {
         results: formattedResults
       });
     } catch (error) {
+      if (signal?.aborted || error.name === 'AbortError' || error.message.includes('aborted')) {
+        console.log(`[SearchController] Similar search aborted for query: "${query}"`);
+        if (!res.writableEnded) {
+          return res.status(499).json({
+            success: false,
+            error: 'Request aborted by user'
+          });
+        }
+        return;
+      }
       console.error('Similar search controller error:', error);
       const isRateLimit = error.message.includes('429') || error.message.includes('CAPTCHA');
       const statusCode = isRateLimit ? 429 : 500;
@@ -369,6 +434,15 @@ class SearchController {
       });
     }
 
+    const abortController = new AbortController();
+    res.on('close', () => {
+      if (!res.writableEnded) {
+        console.log(`[SearchController] Client disconnected. Aborting maps search for: "${query}"`);
+        abortController.abort();
+      }
+    });
+    const signal = abortController.signal;
+
     const scrapeLimit = parseInt(limit) || 15;
 
     // Load or initialize MongoDB session
@@ -388,6 +462,8 @@ class SearchController {
     }
 
     try {
+      if (signal?.aborted) throw new Error('Maps scraping aborted by user');
+
       const Message = require('../models/Message');
       
       // 1. Persist user query message
@@ -403,7 +479,9 @@ class SearchController {
       // 2. Perform maps scraping
       console.log(`[MapsController] Starting scrape for query: "${query}" in bbox: [${minLat}, ${minLng}, ${maxLat}, ${maxLng}]`);
       const mapsScraperService = require('../services/mapsScraperService');
-      const results = await mapsScraperService.scrapeMaps(query, minLat, minLng, maxLat, maxLng, scrapeLimit);
+      const results = await mapsScraperService.scrapeMaps(query, minLat, minLng, maxLat, maxLng, scrapeLimit, { signal });
+
+      if (signal?.aborted) throw new Error('Maps scraping aborted by user');
 
       // 3. Format message content response
       let summaryText = `I have successfully identified ${results.length} business listings matching "${query}" in the specified area. The contact details, ratings, and websites are compiled in the table below.`;
@@ -450,6 +528,16 @@ class SearchController {
       });
 
     } catch (error) {
+      if (signal?.aborted || error.name === 'AbortError' || error.message.includes('aborted')) {
+        console.log(`[SearchController] Maps search aborted for query: "${query}"`);
+        if (!res.writableEnded) {
+          return res.status(499).json({
+            success: false,
+            error: 'Request aborted by user'
+          });
+        }
+        return;
+      }
       console.error('Maps search controller error:', error);
       return res.status(500).json({
         success: false,

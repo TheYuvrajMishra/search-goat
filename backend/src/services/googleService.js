@@ -1,15 +1,43 @@
 const browserService = require('./browserService');
+const cacheService = require('./cacheService');
 
 class GoogleService {
   /**
    * Search query on Google using Puppeteer.
    * @param {string} query
+   * @param {Object} options
    * @returns {Promise<Array<{title: string, url: string, snippet: string}>>}
    */
-  async search(query) {
+  async search(query, options = {}) {
+    const { signal } = options;
+    const cacheKey = cacheService.getCacheKey('google', query);
+    const cachedResults = cacheService.get(cacheKey);
+
+    if (cachedResults) {
+      console.log(`[Cache Hit] Google results found in cache for: "${query}"`);
+      return cachedResults;
+    }
+
     let page;
     try {
-      page = await browserService.createPage();
+      if (signal?.aborted) {
+        throw new Error('Search aborted by user');
+      }
+
+      // Block stylesheets on Google search to save memory and CPU
+      page = await browserService.createPage({ blockStylesheets: true });
+      
+      if (signal) {
+        signal.addEventListener('abort', () => {
+          if (page) {
+            console.log('Aborting Google scraper page due to client signal...');
+            page.close().catch(err => console.error('Error aborting page:', err.message));
+          }
+        });
+        if (signal.aborted) {
+          throw new Error('Search aborted by user');
+        }
+      }
       
       // Force English results to ensure predictable selector structure
       const url = `https://www.google.com/search?q=${encodeURIComponent(query)}&hl=en`;
@@ -21,6 +49,8 @@ class GoogleService {
       if (response && response.status() === 429) {
         throw new Error('Google rate-limit (429) detected. The search request was blocked. Try using DuckDuckGo or configure proxies.');
       }
+
+      if (signal?.aborted) throw new Error('Search aborted by user');
 
       // Check for CAPTCHA pages which might be returned under 200/302 redirects
       const isCaptcha = await page.evaluate(() => {
@@ -36,6 +66,8 @@ class GoogleService {
         console.warn('Google results container div.g not found within timeout.');
       });
 
+      if (signal?.aborted) throw new Error('Search aborted by user');
+      
       // Extract results
       const results = await page.evaluate(() => {
         const items = [];
@@ -85,6 +117,9 @@ class GoogleService {
         return items;
       });
 
+      if (results.length > 0) {
+        cacheService.set(cacheKey, results);
+      }
       return results;
     } catch (error) {
       console.error('Error in Google search service:', error);

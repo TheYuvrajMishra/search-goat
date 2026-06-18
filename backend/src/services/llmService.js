@@ -37,9 +37,11 @@ class LlmService {
    * Generates a concise summary answer given a search query and a list of organic results.
    * @param {string} query The search terms
    * @param {Array<{title: string, url: string, snippet: string}>} results List of organic results
+   * @param {Object} options
    * @returns {Promise<string>} The generated summary or error message
    */
-  async generateSummary(query, results) {
+  async generateSummary(query, results, options = {}) {
+    const { signal } = options;
     if (!results || results.length === 0) {
       return 'No search results available to summarize.';
     }
@@ -67,6 +69,7 @@ Answer:`;
       
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: 'POST',
+        signal, // Connect abort signal to fetch call
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${this.apiKey}`
@@ -97,6 +100,10 @@ Answer:`;
       
       return answer || 'Error: LLM returned an empty response body.';
     } catch (error) {
+      if (error.name === 'AbortError' || signal?.aborted) {
+        console.log('LLM summary synthesis aborted by user.');
+        throw error;
+      }
       console.error('LLM Service Error:', error);
       return `Failed to compile AI summary: ${error.message}`;
     }
@@ -105,9 +112,11 @@ Answer:`;
   /**
    * Generates a concise, descriptive title (2-4 words) in Title Case from the user's initial search query.
    * @param {string} query The user's first search query in the session
+   * @param {Object} options
    * @returns {Promise<string>} Clean session title
    */
-  async generateTitle(query) {
+  async generateTitle(query, options = {}) {
+    const { signal } = options;
     const prompt = `You are a professional editorial title writer. Create a clean, elegant, and descriptive title for a search session based on the user's search query.
 The title must be between 2 to 4 words. Use Title Case. Do not include any quotation marks, punctuation, or generic filler words (like "Search for", "Inquiry about").
 
@@ -120,6 +129,7 @@ Title:`;
       console.log(`Generating session title for query: "${query}" using model: "${modelId}"...`);
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: 'POST',
+        signal, // Connect abort signal to fetch call
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${this.apiKey}`
@@ -155,6 +165,10 @@ Title:`;
 
       return title || query.split(' ').slice(0, 3).join(' ');
     } catch (error) {
+      if (error.name === 'AbortError' || signal?.aborted) {
+        console.log('LLM title generation aborted by user.');
+        throw error;
+      }
       console.error('LLM Title Generation Error:', error);
       return query.split(' ').slice(0, 3).join(' ') || 'New Session';
     }
