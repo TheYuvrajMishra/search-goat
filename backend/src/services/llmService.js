@@ -41,7 +41,7 @@ class LlmService {
    * @returns {Promise<string>} The generated summary or error message
    */
   async generateSummary(query, results, options = {}) {
-    const { signal } = options;
+    const { signal, history = [], compactContext = '' } = options;
     if (!results || results.length === 0) {
       return 'No search results available to summarize.';
     }
@@ -52,7 +52,8 @@ class LlmService {
       .map((r, i) => `[Result ${i + 1}] Title: ${r.title}\nURL: ${r.url}\nSnippet: ${r.snippet}`)
       .join('\n\n');
 
-    const prompt = `You are an expert AI search assistant. Synthesize a concise, accurate, and comprehensive answer to the user's query based solely on the provided search results. Refer to the sources [Result X] when relevant.
+    const prompt = `You are an expert AI search assistant. Synthesize a concise, accurate, and comprehensive answer to the user's query based on the search results provided. Refer to the sources [Result X] when relevant.
+Take into account the context of previous messages in the conversation if they are relevant to understanding the user's query or references.
 
 User Query: "${query}"
 
@@ -65,8 +66,37 @@ Answer:`;
       // Auto-detect loaded model name
       const modelId = await this.getModelId();
       
-      console.log(`Sending synthesis query to LLM at ${this.baseUrl}/chat/completions using model: "${modelId}"...`);
+      console.log(`Sending synthesis query to LLM at ${this.baseUrl}/chat/completions using model: "${modelId}" (context: ${compactContext ? 'compacted' : `${history.length} messages`})...`);
       
+      // Build messages payload including context history
+      const messages = [
+        { 
+          role: 'system', 
+          content: 'You are a helpful search assistant that synthesizes web search results into a concise response.' 
+        }
+      ];
+
+      if (compactContext) {
+        messages.push({
+          role: 'system',
+          content: `Background Context of Conversation: ${compactContext}`
+        });
+      } else {
+        // Add conversation history
+        history.forEach(msg => {
+          messages.push({
+            role: msg.role,
+            content: msg.content
+          });
+        });
+      }
+
+      // Add prompt containing the search results
+      messages.push({
+        role: 'user',
+        content: prompt
+      });
+
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
         method: 'POST',
         signal, // Connect abort signal to fetch call
@@ -76,16 +106,7 @@ Answer:`;
         },
         body: JSON.stringify({
           model: modelId,
-          messages: [
-            { 
-              role: 'system', 
-              content: 'You are a helpful search assistant that synthesizes web search results into a concise response.' 
-            },
-            { 
-              role: 'user', 
-              content: prompt 
-            }
-          ],
+          messages: messages,
           temperature: 0.3,
           max_tokens: 600
         })
@@ -266,6 +287,68 @@ Report:`;
       }
       console.error('LLM Deep Report Generation Error:', error);
       return `Failed to compile deep summary report: ${error.message}`;
+    }
+  }
+
+  /**
+   * Summarizes conversation history into a compact paragraph of context.
+   * @param {Array<Object>} history The message history array
+   * @param {Object} options
+   * @returns {Promise<string>} Compact context summary
+   */
+  async summarizeHistory(history, options = {}) {
+    if (!history || history.length === 0) return '';
+    const { signal } = options;
+
+    const formattedHistory = history
+      .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+      .join('\n');
+
+    const prompt = `Synthesize the following conversation history into a single concise paragraph (maximum 2 sentences) describing the current topic of conversation and any key facts established. This summary will be used as background context for answering the next query.
+Do not write a greeting or intro, just return the summary paragraph.
+
+Conversation History:
+${formattedHistory}
+
+Summary:`;
+
+    try {
+      const modelId = await this.getModelId();
+      console.log(`Summarizing conversation history of ${history.length} messages using model: "${modelId}"...`);
+      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+        method: 'POST',
+        signal,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${this.apiKey}`
+        },
+        body: JSON.stringify({
+          model: modelId,
+          messages: [
+            { 
+              role: 'system', 
+              content: 'You create ultra-short, concise conversation context summaries.' 
+            },
+            { 
+              role: 'user', 
+              content: prompt 
+            }
+          ],
+          temperature: 0.3,
+          max_tokens: 150
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`LLM status ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.choices?.[0]?.message?.content?.trim() || '';
+    } catch (err) {
+      console.error('Failed to summarize history context:', err);
+      // Fallback: Return a very simple manual context summary
+      return history.slice(-2).map(m => `${m.role}: ${m.content.substring(0, 60)}`).join(' | ');
     }
   }
 }

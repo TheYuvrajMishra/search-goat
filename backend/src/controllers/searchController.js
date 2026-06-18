@@ -120,6 +120,7 @@ class SearchController {
     const includeKeywords = req.query.keywords !== 'false';
     const useSimilar = req.query.similar !== 'false';
     const useRanking = req.query.rank !== 'false';
+    const compactContext = req.query.compactContext !== 'false';
 
     if (!query) {
       return res.status(400).json({
@@ -150,6 +151,24 @@ class SearchController {
         // Fallback for custom or invalid ObjectId strings
         session = new Session();
         await session.save();
+      }
+    }
+
+    // Retrieve conversation history context if session exists (before saving current message)
+    let history = [];
+    let compactContextText = '';
+    if (session) {
+      try {
+        const rawHistory = await Message.find({ sessionId: session._id })
+          .sort({ createdAt: -1 })
+          .limit(6);
+        history = rawHistory.reverse();
+
+        if (compactContext && history.length > 0) {
+          compactContextText = await llmService.summarizeHistory(history, { signal });
+        }
+      } catch (err) {
+        console.error('[SearchController] Failed to retrieve history context:', err);
       }
     }
 
@@ -227,7 +246,7 @@ class SearchController {
       const [keywords, summary] = await Promise.all([
         keywordsPromise,
         (summarize && formattedResults.length > 0) 
-          ? llmService.generateSummary(query, formattedResults, { signal }) 
+          ? llmService.generateSummary(query, formattedResults, { signal, history, compactContext: compactContextText }) 
           : Promise.resolve(null)
       ]);
 
