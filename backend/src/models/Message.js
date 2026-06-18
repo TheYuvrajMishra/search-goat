@@ -24,6 +24,10 @@ const MessageSchema = new mongoose.Schema({
     type: [String],
     default: []
   },
+  report: {
+    type: String,
+    default: null
+  },
   createdAt: {
     type: Date,
     default: Date.now

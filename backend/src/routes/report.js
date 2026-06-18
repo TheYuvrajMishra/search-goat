@@ -14,4 +14,10 @@ router.get('/', reportController.handleGenerateReport);
    */
 router.get('/:query', reportController.handleGenerateReport);
 
+/**
+   * Route: POST /api/report/generate
+   * Description: Generates a deep summary report for a specific message's search results using Puppeteer and LLM synthesis.
+   */
+router.post('/generate', reportController.handleGenerateReportFromMessage);
+
 module.exports = router;

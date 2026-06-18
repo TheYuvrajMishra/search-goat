@@ -282,6 +282,81 @@ class ReportService {
       reports: scrapedReports
     };
   }
+
+  /**
+   * Scrapes content from a specific list of sources instead of performing a fresh search.
+   * @param {Array<{title: string, url: string, snippet: string}>} sources List of sources to scrape
+   * @returns {Promise<Array<Object>>} Scraped contents reports
+   */
+  async scrapeSources(sources) {
+    const scrapedReports = [];
+
+    for (const source of sources) {
+      console.log(`ReportService: Scraping text content from exact source: ${source.url}`);
+      let page;
+      try {
+        page = await browserService.createPage();
+        
+        await page.goto(source.url, { 
+          waitUntil: 'domcontentloaded', 
+          timeout: 20000 
+        });
+
+        const extracted = await page.evaluate(() => {
+          const selectorsToRemove = [
+            'script', 'style', 'noscript', 'iframe', 'svg', 'canvas',
+            'header', 'footer', 'nav', 'aside',
+            '.ad', '.ads', '[class*="ad-"]', '[id*="ad-"]',
+            '.footer', '.header', '.nav', '.menu', '.sidebar'
+          ];
+          
+          selectorsToRemove.forEach(sel => {
+            try {
+              document.querySelectorAll(sel).forEach(el => el.remove());
+            } catch (e) {}
+          });
+
+          const article = document.querySelector('article') || document.querySelector('main');
+          let text = '';
+          if (article) {
+            text = article.innerText;
+          } else {
+            text = document.body ? document.body.innerText : '';
+          }
+
+          return text
+            .replace(/\s+/g, ' ')
+            .trim();
+        });
+
+        scrapedReports.push({
+          title: source.title,
+          url: source.url,
+          snippet: source.snippet,
+          status: 'success',
+          content: extracted
+        });
+      } catch (err) {
+        console.error(`ReportService: Error scraping exact source ${source.url}:`, err.message);
+        scrapedReports.push({
+          title: source.title,
+          url: source.url,
+          snippet: source.snippet,
+          status: 'failed',
+          error: err.message,
+          content: ''
+        });
+      } finally {
+        if (page) {
+          await page.close().catch(closeErr => 
+            console.error(`ReportService: Error closing page for exact source ${source.url}:`, closeErr.message)
+          );
+        }
+      }
+    }
+
+    return scrapedReports;
+  }
 }
 
 module.exports = new ReportService();

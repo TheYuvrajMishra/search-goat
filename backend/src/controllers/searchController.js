@@ -234,8 +234,9 @@ class SearchController {
       if (signal?.aborted) throw new Error('Search aborted by user');
 
       // Persist assistant message and perform LLM title generation
+      let assistantMsg = null;
       if (session) {
-        const assistantMsg = new Message({
+        assistantMsg = new Message({
           sessionId: session._id,
           role: 'assistant',
           content: summary || "Synthesis successfully integrated. Review the structural pillars below.",
@@ -275,6 +276,7 @@ class SearchController {
           sessionId: session ? session._id : undefined,
           sessionTitle: session ? session.title : undefined
         },
+        messageId: assistantMsg ? assistantMsg._id : undefined,
         summary: summary, // Always returned (either the summary string or null)
         results: formattedResults
       });
@@ -491,8 +493,9 @@ class SearchController {
       }
 
       // 4. Persist assistant message in database
+      let assistantMsg = null;
       if (session) {
-        const assistantMsg = new Message({
+        assistantMsg = new Message({
           sessionId: session._id,
           role: 'assistant',
           content: summaryText,
@@ -523,6 +526,7 @@ class SearchController {
           sessionId: session ? session._id : undefined,
           sessionTitle: session ? session.title : undefined
         },
+        messageId: assistantMsg ? assistantMsg._id : undefined,
         summary: summaryText,
         results: results
       });

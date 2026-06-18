@@ -6,10 +6,12 @@ import { PiSidebarLight, PiNotePencilLight } from 'react-icons/pi';
 import { Sidebar } from '../components/layout/Sidebar';
 
 interface Message {
+  id?: string;
   role: 'user' | 'assistant';
   content: string;
   results?: any[];
   keywords?: string[];
+  report?: string | null;
 }
 
 const ChatPage: React.FC = () => {
@@ -23,6 +25,7 @@ const ChatPage: React.FC = () => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [sessions, setSessions] = useState<any[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [generatingReports, setGeneratingReports] = useState<Record<string, boolean>>({});
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -219,10 +222,12 @@ const ChatPage: React.FC = () => {
 
       if (data.success) {
         const assistantMessage: Message = {
+          id: data.messageId,
           role: 'assistant',
           content: data.summary || "Synthesis successfully integrated. Review the structural pillars below.",
           results: data.results,
-          keywords: data.meta?.keywords
+          keywords: data.meta?.keywords,
+          report: null
         };
         setMessages(prev => [...prev, assistantMessage]);
         
@@ -310,10 +315,12 @@ const ChatPage: React.FC = () => {
 
       if (data.success) {
         const assistantMessage: Message = {
+          id: data.messageId,
           role: 'assistant',
           content: data.summary || `Extracted ${data.results?.length} business leads successfully.`,
           results: data.results,
-          keywords: [params.query, 'google-maps', 'leads']
+          keywords: [params.query, 'google-maps', 'leads'],
+          report: null
         };
         setMessages(prev => [...prev, assistantMessage]);
         fetchSessions();
@@ -337,6 +344,35 @@ const ChatPage: React.FC = () => {
       if (abortControllerRef.current === controller) {
         abortControllerRef.current = null;
       }
+    }
+  };
+
+  const handleGenerateReport = async (messageId: string) => {
+    setGeneratingReports(prev => ({ ...prev, [messageId]: true }));
+    try {
+      const response = await fetch('http://localhost:3000/report/generate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ messageId })
+      });
+      const data = await response.json();
+      if (data.success) {
+        setMessages(prev => prev.map(msg => {
+          if (msg.id === messageId) {
+            return { ...msg, report: data.report };
+          }
+          return msg;
+        }));
+      } else {
+        alert(`Failed to generate report: ${data.error || 'Server error'}`);
+      }
+    } catch (error: any) {
+      console.error('Failed to generate report:', error);
+      alert(`Failed to generate report: ${error.message}`);
+    } finally {
+      setGeneratingReports(prev => ({ ...prev, [messageId]: false }));
     }
   };
 
@@ -432,7 +468,12 @@ const ChatPage: React.FC = () => {
             <div className="max-w-[1200px] mx-auto space-y-20 md:space-y-32">
               <AnimatePresence initial={false}>
                 {messages.map((msg, index) => (
-                  <ChatMessage key={index} message={msg} />
+                  <ChatMessage 
+                    key={index} 
+                    message={msg} 
+                    isGeneratingReport={generatingReports[msg.id || '']}
+                    onGenerateReport={msg.id ? () => handleGenerateReport(msg.id!) : undefined}
+                  />
                 ))}
                 
                 {isLoading && (

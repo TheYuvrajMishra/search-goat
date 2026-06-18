@@ -60,10 +60,12 @@ class SessionController {
           createdAt: session.createdAt,
           updatedAt: session.updatedAt,
           messages: messages.map(msg => ({
+            id: msg._id,
             role: msg.role,
             content: msg.content,
             results: msg.results,
-            keywords: msg.keywords
+            keywords: msg.keywords,
+            report: msg.report
           }))
         }
       });
