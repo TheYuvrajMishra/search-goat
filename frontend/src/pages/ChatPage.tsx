@@ -4,6 +4,7 @@ import { ChatMessage } from '../components/chat/ChatMessage';
 import { ChatInput } from '../components/chat/ChatInput';
 import { PiSidebarLight, PiNotePencilLight } from 'react-icons/pi';
 import { Sidebar } from '../components/layout/Sidebar';
+import { ColdEmailGenerator } from './ColdEmailGenerator';
 
 interface Message {
   id?: string;
@@ -26,6 +27,7 @@ const ChatPage: React.FC = () => {
   const [sessions, setSessions] = useState<any[]>([]);
   const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
   const [generatingReports, setGeneratingReports] = useState<Record<string, boolean>>({});
+  const [activeTab, setActiveTab] = useState<'chat' | 'email'>('chat');
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -74,6 +76,7 @@ const ChatPage: React.FC = () => {
   }, []);
 
   const handleSessionSelect = async (sessionId: string) => {
+    setActiveTab('chat');
     setIsLoading(true);
     try {
       const response = await fetch(`http://localhost:3000/sessions/${sessionId}`);
@@ -134,6 +137,7 @@ const ChatPage: React.FC = () => {
   };
 
   const handleNewSession = () => {
+    setActiveTab('chat');
     setCurrentSessionId(null);
     setPendingSessionTitle('New Investigation');
     setMessages([
@@ -387,6 +391,8 @@ const ChatPage: React.FC = () => {
         onSessionDelete={handleSessionDelete}
         onSessionRename={handleSessionRename}
         onNewSession={handleNewSession}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
       />
 
       {/* Main Chat Content Area */}
@@ -410,7 +416,7 @@ const ChatPage: React.FC = () => {
 
             <div className="flex flex-col gap-1 min-w-0">
               
-              {isEditingTitle ? (
+              {isEditingTitle && activeTab === 'chat' ? (
                 <input
                   type="text"
                   value={titleValue}
@@ -445,75 +451,83 @@ const ChatPage: React.FC = () => {
                 />
               ) : (
                 <div 
-                  onClick={() => setIsEditingTitle(true)}
-                  className="group/title flex items-center gap-2 cursor-pointer min-w-0"
-                  title="Click to rename session"
+                  onClick={() => activeTab === 'chat' && setIsEditingTitle(true)}
+                  className={`group/title flex items-center gap-2 min-w-0 ${activeTab === 'chat' ? 'cursor-pointer' : 'cursor-default'}`}
+                  title={activeTab === 'chat' ? "Click to rename session" : ""}
                 >
-                  <h1 className="text-[16px] sm:text-[18px] md:text-[20px] font-serif font-medium tracking-tight text-[#1A1817] group-hover/title:text-emerald-800 transition-colors duration-300 truncate">
-                    {currentSessionId ? sessionTitle : pendingSessionTitle}
+                  <h1 className={`text-[16px] sm:text-[18px] md:text-[20px] font-serif font-medium tracking-tight text-[#1A1817] transition-colors duration-300 truncate ${activeTab === 'chat' ? 'group-hover/title:text-emerald-800' : ''}`}>
+                    {activeTab === 'chat' ? (currentSessionId ? sessionTitle : pendingSessionTitle) : 'Cold Email Synthesizer'}
                   </h1>
-                  <PiNotePencilLight className="text-xs text-[#1A1817]/30 opacity-0 group-hover/title:opacity-100 transition-all duration-300 flex-shrink-0" />
+                  {activeTab === 'chat' && (
+                    <PiNotePencilLight className="text-xs text-[#1A1817]/30 opacity-0 group-hover/title:opacity-100 transition-all duration-300 flex-shrink-0" />
+                  )}
                 </div>
               )}
             </div>
           </motion.div>
         </header>
 
-        {/* CENTRAL INTELLIGENCE STREAM */}
-        <main className="relative z-10 flex-1 w-full overflow-hidden flex flex-col">
-          <div 
-            ref={scrollContainerRef}
-            className="relative flex-1 overflow-y-auto scrollbar-hide px-6 md:px-16 lg:px-24 pt-12 pb-32 md:pt-20 md:pb-48"
-          >
-            <div className="max-w-[1200px] mx-auto space-y-20 md:space-y-32">
-              <AnimatePresence initial={false}>
-                {messages.map((msg, index) => (
-                  <ChatMessage 
-                    key={index} 
-                    message={msg} 
-                    isGeneratingReport={generatingReports[msg.id || '']}
-                    onGenerateReport={msg.id ? () => handleGenerateReport(msg.id!) : undefined}
-                  />
-                ))}
-                
-                {isLoading && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex justify-start"
-                  >
-                    <div className="flex items-center gap-4 px-8 py-5 md:px-10 md:py-6 rounded-[2rem] md:rounded-[2.5rem] bg-[#F4F1EA]/50 border border-[#1A1817]/[0.03] shadow-[0_20px_60px_rgba(0,0,0,0.02)]">
-                      <div className="text-[10px] md:text-[11px] uppercase tracking-[0.4em] font-black text-[#1A1817]/30 italic">Synthesizing Core</div>
-                      <div className="flex gap-2">
-                        {[0, 1, 2].map(i => (
-                          <motion.div
-                            key={i}
-                            animate={{ y: [0, -4, 0], opacity: [0.2, 1, 0.2] }}
-                            transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.15 }}
-                            className="w-1 md:w-1.5 h-1 md:h-1.5 rounded-full bg-[#1A1817]/20"
-                          />
-                        ))}
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
-              <div ref={messagesEndRef} />
-            </div>
-          </div>
-        </main>
+        {activeTab === 'chat' ? (
+          <>
+            {/* CENTRAL INTELLIGENCE STREAM */}
+            <main className="relative z-10 flex-1 w-full overflow-hidden flex flex-col">
+              <div 
+                ref={scrollContainerRef}
+                className="relative flex-1 overflow-y-auto scrollbar-hide px-6 md:px-16 lg:px-24 pt-12 pb-32 md:pt-20 md:pb-48"
+              >
+                <div className="max-w-[1200px] mx-auto space-y-20 md:space-y-32">
+                  <AnimatePresence initial={false}>
+                    {messages.map((msg, index) => (
+                      <ChatMessage 
+                        key={index} 
+                        message={msg} 
+                        isGeneratingReport={generatingReports[msg.id || '']}
+                        onGenerateReport={msg.id ? () => handleGenerateReport(msg.id!) : undefined}
+                      />
+                    ))}
+                    
+                    {isLoading && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex justify-start"
+                      >
+                        <div className="flex items-center gap-4 px-8 py-5 md:px-10 md:py-6 rounded-[2rem] md:rounded-[2.5rem] bg-[#F4F1EA]/50 border border-[#1A1817]/[0.03] shadow-[0_20px_60px_rgba(0,0,0,0.02)]">
+                          <div className="text-[10px] md:text-[11px] uppercase tracking-[0.4em] font-black text-[#1A1817]/30 italic">Synthesizing Core</div>
+                          <div className="flex gap-2">
+                            {[0, 1, 2].map(i => (
+                              <motion.div
+                                key={i}
+                                animate={{ y: [0, -4, 0], opacity: [0.2, 1, 0.2] }}
+                                transition={{ repeat: Infinity, duration: 1.2, delay: i * 0.15 }}
+                                className="w-1 md:w-1.5 h-1 md:h-1.5 rounded-full bg-[#1A1817]/20"
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  <div ref={messagesEndRef} />
+                </div>
+              </div>
+            </main>
 
-        {/* PERSISTENT INPUT ISLAND */}
-        <footer className="absolute bottom-0 left-0 right-0 z-30 w-full px-6 md:px-16 lg:px-24 pb-8 md:pb-12 pt-10 bg-gradient-to-t from-[#FDFBF7] via-[#FDFBF7]/90 to-transparent pointer-events-none">
-          <div className="max-w-[900px] mx-auto pointer-events-auto">
-            <ChatInput 
-              onSend={handleSendMessage} 
-              onSendMaps={handleSendMapsMessage} 
-              onStop={handleStopResponse} 
-              isLoading={isLoading} 
-            />
-          </div>
-        </footer>
+            {/* PERSISTENT INPUT ISLAND */}
+            <footer className="absolute bottom-0 left-0 right-0 z-30 w-full px-6 md:px-16 lg:px-24 pb-8 md:pb-12 pt-10 bg-gradient-to-t from-[#FDFBF7] via-[#FDFBF7]/90 to-transparent pointer-events-none">
+              <div className="max-w-[900px] mx-auto pointer-events-auto">
+                <ChatInput 
+                  onSend={handleSendMessage} 
+                  onSendMaps={handleSendMapsMessage} 
+                  onStop={handleStopResponse} 
+                  isLoading={isLoading} 
+                />
+              </div>
+            </footer>
+          </>
+        ) : (
+          <ColdEmailGenerator />
+        )}
       </div>
     </div>
   );

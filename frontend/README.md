@@ -71,3 +71,10 @@ export default defineConfig([
   },
 ])
 ```
+
+## Cold Email Synthesizer Feature
+A brand new tab is available in the sidebar dashboard called **Outreach**:
+1. **My Context File**: View, edit, and save your business value proposition and tone settings directly from the UI. It modifies `email_context.md` at the workspace root.
+2. **Company Name List**: Enter one or more company names (bulk list, one per line) you wish to outreach.
+3. **Synthesis Engine**: Uses DuckDuckGo/Google search to automatically identify the company's purpose and what they do, then builds a tailored sales outreach draft matching your context.
+4. **Outreach Stack results**: Look through generated emails, see the synthesized profiles, and copy complete sales copies with one-click copy buttons.

@@ -92,9 +92,14 @@ Performs a comprehensive search using multiple similar queries, then uses an LLM
 - `GET /search/google/summary?q=<term>`
 - `GET /search/duckduckgo/summary?q=<term>`
 
-### 6. Health Check
+### 7. Health Check
 `GET /status`
 Returns the server status and browser initialization state.
+
+### 8. Cold Email Synthesizer
+- `GET /api/email/context` or `GET /email/context`: Reads and returns the contents of `email_context.md`.
+- `POST /api/email/context` or `POST /email/context`: Overwrites `email_context.md` with the provided markdown `{ content: string }`.
+- `POST /api/email/generate` or `POST /email/generate`: Accepts `{ companies: string[], engine: string }` and generates personalized cold emails staggered to prevent search blocking.
 
 ## Project Structure
 

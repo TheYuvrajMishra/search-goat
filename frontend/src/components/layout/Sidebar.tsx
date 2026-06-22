@@ -8,7 +8,9 @@ import {
   PiPlusLight,
   PiLightbulbLight,
   PiCopyrightLight,
-  PiPaperPlaneTiltLight
+  PiPaperPlaneTiltLight,
+  PiChatCircleLight,
+  PiEnvelopeSimpleLight
 } from 'react-icons/pi';
 
 interface Session {
@@ -27,6 +29,8 @@ interface SidebarProps {
   onSessionDelete: (sessionId: string) => void;
   onSessionRename: (sessionId: string, newTitle: string) => void;
   onNewSession: () => void;
+  activeTab: 'chat' | 'email';
+  setActiveTab: (tab: 'chat' | 'email') => void;
 }
 
 // Stagger variants for the history items cascade reveal
@@ -58,7 +62,9 @@ export const Sidebar: React.FC<SidebarProps> = ({
   onSessionSelect,
   onSessionDelete,
   onSessionRename,
-  onNewSession
+  onNewSession,
+  activeTab,
+  setActiveTab
 }) => {
   const [editingSessionId, setEditingSessionId] = useState<string | null>(null);
   const [editTitleValue, setEditTitleValue] = useState('');
@@ -176,6 +182,38 @@ export const Sidebar: React.FC<SidebarProps> = ({
               <PiXLight className="text-lg" />
             </button>
           </div>
+        </div>
+
+        {/* Navigation Tabs */}
+        <div className="grid grid-cols-2 p-1 bg-[#1A1817]/[0.03] border border-[#1A1817]/[0.04] rounded-2xl">
+          <button
+            onClick={() => {
+              setActiveTab('chat');
+              setIsSidebarOpen(false);
+            }}
+            className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] uppercase font-bold tracking-wider transition-all duration-300 cursor-pointer ${
+              activeTab === 'chat'
+                ? 'bg-[#FDFBF7] text-[#1A1817] shadow-[0_4px_12px_rgba(26,24,23,0.05)] border border-[#1A1817]/[0.02]'
+                : 'text-[#1A1817]/40 hover:text-[#1A1817]/70'
+            }`}
+          >
+            <PiChatCircleLight className="text-sm" />
+            <span>AI Search</span>
+          </button>
+          <button
+            onClick={() => {
+              setActiveTab('email');
+              setIsSidebarOpen(false);
+            }}
+            className={`flex items-center justify-center gap-2 py-2.5 rounded-xl text-[10px] uppercase font-bold tracking-wider transition-all duration-300 cursor-pointer ${
+              activeTab === 'email'
+                ? 'bg-[#FDFBF7] text-[#1A1817] shadow-[0_4px_12px_rgba(26,24,23,0.05)] border border-[#1A1817]/[0.02]'
+                : 'text-[#1A1817]/40 hover:text-[#1A1817]/70'
+            }`}
+          >
+            <PiEnvelopeSimpleLight className="text-sm" />
+            <span>Outreach</span>
+          </button>
         </div>
 
         {/* Intelligence Histories */}

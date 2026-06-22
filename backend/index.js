@@ -6,6 +6,7 @@ const searchRouter = require('./src/routes/search');
 const sessionRouter = require('./src/routes/session');
 const featureRequestRouter = require('./src/routes/featureRequest');
 const reportRouter = require('./src/routes/report');
+const emailRouter = require('./src/routes/email');
 const browserService = require('./src/services/browserService');
 
 // Connect to MongoDB
@@ -36,6 +37,8 @@ app.use('/api/features', featureRequestRouter);
 app.use('/features', featureRequestRouter);
 app.use('/api/report', reportRouter);
 app.use('/report', reportRouter);
+app.use('/api/email', emailRouter);
+app.use('/email', emailRouter);
 
 // Health check endpoint
 app.get('/status', (req, res) => {
