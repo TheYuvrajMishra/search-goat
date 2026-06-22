@@ -27,7 +27,7 @@ class EmailService {
 ## 1. Candidate Profile & Target Roles
 - **Name**: Yuvraj
 - **Target Role(s)**: Full-Stack Engineer, Frontend Engineer, Software Developer
-- **Years of Experience**: 2+ years of software development experience
+- **Years of Experience**: 4+ years of software development experience
 
 ## 2. Core Technical Skills & Tech Stack
 - **Languages**: JavaScript (ES6+), TypeScript, HTML5/CSS3, Python
@@ -152,39 +152,44 @@ Write a concise, accurate description (maximum 3 sentences, under 100 words). Be
 
     // 3. Generate cold email based on user context and company purpose
     let emailContent = '';
-    const emailPrompt = `You are a modern tech career strategist and professional outreach copywriter.
-Your task is to write a highly personalized, compelling, and casually formatted cold networking/job outreach email to "${companyName}" from Yuvraj.
-Your goal is to pitch Yuvraj (from the Candidate Context) for a role, aligning their skills, experience, and projects with what the company does.
+    const emailPrompt = `You are a sharp, young tech founder who writes cold outreach that actually gets replies.
+Write a cold email from Yuvraj to "${companyName}" for a full-stack engineering role.
 
-CANDIDATE CONTEXT (BACKGROUND & SKILLS):
+CANDIDATE CONTEXT:
 ${userContext}
 
-TARGET COMPANY PROFILE:
-Company: ${companyName}
-What they do / Purpose: ${companyPurpose}
+COMPANY:
+Name: ${companyName}
+What they do: ${companyPurpose}
 
-INSTRUCTIONS:
-1. Write a casual, attention-grabbing, and click-worthy Subject Line.
-2. In the email body, you MUST start precisely with:
+RULES:
+- Subject must be a HOOK — a specific observation, question, or provocative claim. NEVER a job title. Examples: "built a marketplace at 19 — want to chat?", "saw what Kavia is doing with codebases", "shipped this, think it maps to your stack"
+- The company callout must include a TECHNICAL or PRODUCT-SPECIFIC detail from their profile — not just their name
+- BANNED phrases (add to existing list): "I'd love to discuss", "contribute to your mission", "my experience can", "resonates with me"
+- After the company callout, immediately pivot to ONE concrete technical match — e.g. "we're both dealing with [X problem], I solved it with [Y]"
+- The technical bridge MUST be honest — only draw a parallel if Yuvraj's work genuinely maps to the company's problem. If it doesn't map cleanly, lead with curiosity about their stack instead, not a forced analogy.
+- Subject formula: "[specific action] + [implied stakes]" — e.g. "shipped X at 19", "noticed Y in your stack", "built this, might be relevant"
+- BANNED: "caught my attention", "we're both dealing with", "I saw that"
+- Start EXACTLY with: Hello Team,
+- End EXACTLY with: Regards,\nYuvraj
+- Under 250 words total (body only dividing in 3 paragraphs, not counting subject or sign-off)
+- Voice: confident, casual, builder-first — use terms like "shipped", "built from scratch", "obsessed with", "moving fast", "would love to contribute"
+- ONE specific callout to what ${companyName} actually does — show you did the homework
+- ONE concrete thing Yuvraj built that maps to their stack or problem space
+- CTA: low-friction ask — "quick 10-min chat?" not a formal interview request
+- NO filler phrases: "I came across", "I would love the opportunity", "I am writing to", "I hope this finds you well"
+- NO bullet points in the email body
+- NO corporate tone whatsoever
+
+FORMAT (return ONLY this, nothing else):
+Subject: [subject]
+
 Hello Team,
-3. Use a casual, young, and modern tech lingo/vibe (e.g. enthusiastic, direct, relatable, using terms like "hacking on", "shipping fast", "obsessed with", "super down to contribute", etc. Keep it clean and readable but very casual).
-4. Casually align Yuvraj's value proposition and skills (like Node.js, Puppeteer, React) with the company's purpose or tech stack.
-5. End with a clear, casual call to action (CTA) for a quick virtual chat or sync.
-6. You MUST end the email precisely with:
-Regards,
-Yuvraj
-7. Keep the email concise (under 120 words).
-8. Return only the email with the Subject Line first. Format like this:
-Subject: [Subject Line]
 
-Hello Team,
-
-[Email Body]
+[body]
 
 Regards,
-Yuvraj
-
-Do not include any notes, formatting explanation, or prefaces. Just return the Subject and the Body.`;
+Yuvraj`;
 
     try {
       const modelId = await llmService.getModelId();
