@@ -17,6 +17,7 @@ interface EmailResult {
   company: string;
   purpose: string;
   email: string;
+  toEmail?: string;
 }
 
 export const ColdEmailGenerator: React.FC = () => {
@@ -34,6 +35,7 @@ export const ColdEmailGenerator: React.FC = () => {
 
   // Individual copy states: maps companyName to copied boolean
   const [copiedStates, setCopiedStates] = useState<Record<string, boolean>>({});
+  const [copiedSubjectStates, setCopiedSubjectStates] = useState<Record<string, boolean>>({});
 
   // Fetch context from backend on mount
   const fetchContext = async () => {
@@ -85,16 +87,34 @@ export const ColdEmailGenerator: React.FC = () => {
       return;
     }
 
-    // Split inputs by newline
-    const companies = companiesInput
+    // Parse target companies and target email addresses
+    const parsedList = companiesInput
       .split('\n')
-      .map(c => c.trim())
-      .filter(c => c.length > 0);
+      .map(line => {
+        const trimmed = line.trim();
+        if (!trimmed) return null;
+        
+        // Find last comma
+        const lastCommaIdx = trimmed.lastIndexOf(',');
+        if (lastCommaIdx !== -1) {
+          const possibleEmail = trimmed.substring(lastCommaIdx + 1).trim();
+          const possibleName = trimmed.substring(0, lastCommaIdx).trim();
+          
+          // Basic email check: has '@' and '.'
+          if (possibleEmail.includes('@') && possibleEmail.includes('.')) {
+            return { name: possibleName, email: possibleEmail };
+          }
+        }
+        return { name: trimmed, email: '' };
+      })
+      .filter((item): item is { name: string; email: string } => item !== null && item.name.length > 0);
 
-    if (companies.length === 0) {
+    if (parsedList.length === 0) {
       setGenerationError('Please enter at least one valid company name.');
       return;
     }
+
+    const companyNames = parsedList.map(item => item.name);
 
     setIsGenerating(true);
     setGenerationError(null);
@@ -104,12 +124,17 @@ export const ColdEmailGenerator: React.FC = () => {
       const response = await fetch('http://localhost:3000/email/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ companies })
+        body: JSON.stringify({ companies: companyNames })
       });
 
       const data = await response.json();
       if (data.success) {
-        setResults(data.results);
+        // Map the recipient email back to the result by index
+        const mappedResults = data.results.map((res: any, index: number) => ({
+          ...res,
+          toEmail: parsedList[index] ? parsedList[index].email : ''
+        }));
+        setResults(mappedResults);
       } else {
         throw new Error(data.error || 'Failed to synthesize cold emails.');
       }
@@ -121,13 +146,161 @@ export const ColdEmailGenerator: React.FC = () => {
     }
   };
 
-  // Copy to clipboard helper
-  const handleCopy = (companyName: string, text: string) => {
-    navigator.clipboard.writeText(text);
+  // Copy to clipboard helper (with rich text fallback for Gmail formatting)
+  const handleCopy = async (companyName: string, _subject: string, bodyText: string) => {
+    // plain text version (ensure links have https://)
+    const plainText = bodyText.split('\n').map(line => {
+      const trimmed = line.trim();
+      if (trimmed.toLowerCase().includes('github') || trimmed.toLowerCase().includes('linkedin')) {
+        let processed = trimmed;
+        processed = processed.replace(/(?<!https?:\/\/)(github\.com\/[a-zA-Z0-9_-]+)/gi, 'https://$1');
+        processed = processed.replace(/(?<!https?:\/\/)(linkedin\.com\/in\/[a-zA-Z0-9_-]+)/gi, 'https://$1');
+        return processed;
+      }
+      return line;
+    }).join('\n');
+
+    // Split by double newline to identify paragraphs
+    const paragraphs = bodyText.split(/\n\s*\n/);
+    const htmlLines = paragraphs.map(para => {
+      const trimmedPara = para.trim();
+      if (trimmedPara === '') return '';
+      
+      const lines = trimmedPara.split('\n').map(line => {
+        let processed = line.trim();
+        if (processed.toLowerCase().includes('github') || processed.toLowerCase().includes('linkedin')) {
+          // match github
+          const githubMatch = processed.match(/github\.com\/([a-zA-Z0-9_-]+)/i);
+          if (githubMatch) {
+            const username = githubMatch[1];
+            const url = `https://github.com/${username}`;
+            processed = processed.replace(/(?:GitHub:\s*)?(?:https?:\/\/)?(?:www\.)?github\.com\/[a-zA-Z0-9_-]+/i, `<a href="${url}" style="color: #0969da; text-decoration: underline; font-weight: 500;">GitHub</a>`);
+          }
+          
+          // match linkedin
+          const linkedinMatch = processed.match(/linkedin\.com\/in\/([a-zA-Z0-9_-]+)/i);
+          if (linkedinMatch) {
+            const username = linkedinMatch[1];
+            const url = `https://linkedin.com/in/${username}`;
+            processed = processed.replace(/(?:LinkedIn:\s*)?(?:https?:\/\/)?(?:www\.)?linkedin\.com\/in\/[a-zA-Z0-9_-]+/i, `<a href="${url}" style="color: #0969da; text-decoration: underline; font-weight: 500;">LinkedIn</a>`);
+          }
+        }
+        return processed;
+      });
+
+      return `<p style="margin: 0 0 1em 0; font-family: sans-serif; font-size: 14px; color: #1a1817; line-height: 1.5;">${lines.join('<br/>')}</p>`;
+    }).filter(p => p !== '').join('');
+
+    const htmlContent = `
+      <html>
+      <body style="font-family: sans-serif; font-size: 14px; color: #1a1817; line-height: 1.5;">
+        ${htmlLines}
+      </body>
+      </html>
+    `;
+
+    try {
+      if (navigator.clipboard && window.ClipboardItem) {
+        const textBlob = new Blob([plainText], { type: 'text/plain' });
+        const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+        const clipboardItem = new ClipboardItem({
+          'text/plain': textBlob,
+          'text/html': htmlBlob
+        });
+        await navigator.clipboard.write([clipboardItem]);
+      } else {
+        await navigator.clipboard.writeText(plainText);
+      }
+    } catch (err) {
+      console.error('Failed to copy rich text:', err);
+      try {
+        await navigator.clipboard.writeText(plainText);
+      } catch (err2) {
+        console.error('Fallback copy failed:', err2);
+      }
+    }
+
     setCopiedStates(prev => ({ ...prev, [companyName]: true }));
     setTimeout(() => {
       setCopiedStates(prev => ({ ...prev, [companyName]: false }));
     }, 2000);
+  };
+
+  // Copy Subject helper
+  const handleCopySubject = (companyName: string, text: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedSubjectStates(prev => ({ ...prev, [companyName]: true }));
+    setTimeout(() => {
+      setCopiedSubjectStates(prev => ({ ...prev, [companyName]: false }));
+    }, 2000);
+  };
+
+  // Renders the email body, formatting GitHub/LinkedIn profiles as clickable links
+  const renderBodyWithLinks = (bodyText: string) => {
+    const paragraphs = bodyText.split(/\n\s*\n/);
+    return paragraphs.map((para, paraIndex) => {
+      const trimmedPara = para.trim();
+      if (trimmedPara === '') return null;
+
+      const lines = trimmedPara.split('\n').map((line, lineIndex) => {
+        const trimmedLine = line.trim();
+        const isSignatureLine = trimmedLine.toLowerCase().includes('github') || trimmedLine.toLowerCase().includes('linkedin');
+        
+        if (isSignatureLine) {
+          const githubMatch = trimmedLine.match(/github\.com\/([a-zA-Z0-9_-]+)/i);
+          const linkedinMatch = trimmedLine.match(/linkedin\.com\/in\/([a-zA-Z0-9_-]+)/i);
+          
+          let githubUrl = '';
+          if (githubMatch) {
+            githubUrl = `https://github.com/${githubMatch[1]}`;
+          }
+          
+          let linkedinUrl = '';
+          if (linkedinMatch) {
+            linkedinUrl = `https://linkedin.com/in/${linkedinMatch[1]}`;
+          }
+
+          return (
+            <span key={lineIndex} className="inline-flex flex-wrap items-center gap-2 text-[12px] font-mono mt-1 pt-1 border-t border-[#1A1817]/[0.03]">
+              {githubUrl && (
+                <a
+                  href={githubUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo-600 hover:text-indigo-800 underline font-medium"
+                >
+                  GitHub
+                </a>
+              )}
+              {githubUrl && linkedinUrl && <span className="text-[#1A1817]/30">|</span>}
+              {linkedinUrl && (
+                <a
+                  href={linkedinUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-indigo-600 hover:text-indigo-800 underline font-medium"
+                >
+                  LinkedIn
+                </a>
+              )}
+            </span>
+          );
+        }
+
+        return (
+          <span key={lineIndex}>
+            {line}
+            {lineIndex < trimmedPara.split('\n').length - 1 && <br />}
+          </span>
+        );
+      });
+
+      return (
+        <p key={paraIndex} className="mb-4 last:mb-0">
+          {lines}
+        </p>
+      );
+    });
   };
 
   // Helper to parse subject and body from the generated email string
@@ -169,9 +342,6 @@ export const ColdEmailGenerator: React.FC = () => {
       <div className="max-w-[1200px] mx-auto w-full space-y-12">
         {/* Page Header */}
         <div className="flex flex-col gap-2">
-          <span className="w-max rounded-full px-2.5 py-0.5 bg-[#1A1817]/[0.03] border border-[#1A1817]/[0.05] text-[9px] uppercase tracking-[0.2em] font-black text-[#1A1817]/50 italic">
-            Automated Career Pitch Engine
-          </span>
           <h1 className="text-[28px] md:text-[36px] font-serif font-medium tracking-tight text-[#1A1817]">
             Job Outreach Synthesizer
           </h1>
@@ -268,7 +438,7 @@ export const ColdEmailGenerator: React.FC = () => {
                 <textarea
                   value={companiesInput}
                   onChange={(e) => setCompaniesInput(e.target.value)}
-                  placeholder="Enter company names, one per line. E.g.&#10;Google&#10;Stripe&#10;Airbnb"
+                  placeholder="Enter targets, one per line. E.g.&#10;Google, hr@google.com&#10;Stripe, jobs@stripe.com&#10;Airbnb"
                   rows={6}
                   className="w-full p-5 bg-[#FDFBF7] rounded-[calc(1rem-0.125rem)] text-[12px] md:text-[13px] font-sans text-[#1A1817] placeholder-[#1A1817]/25 border-none outline-none focus:bg-white transition-all duration-300 resize-none"
                 />
@@ -357,7 +527,20 @@ export const ColdEmailGenerator: React.FC = () => {
                 {results.map((result) => {
                   const isCopied = copiedStates[result.company] || false;
                   const { subject, body } = parseEmail(result.email);
-                  const gmailUrl = `https://mail.google.com/mail/u/0/?fs=1&tf=cm&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+                  
+                  // Ensure URLs in plain text have https:// for Gmail auto-linkify
+                  const plainTextBody = body.split('\n').map(line => {
+                    const trimmed = line.trim();
+                    if (trimmed.toLowerCase().includes('github') || trimmed.toLowerCase().includes('linkedin')) {
+                      let processed = trimmed;
+                      processed = processed.replace(/(?<!https?:\/\/)(github\.com\/[a-zA-Z0-9_-]+)/gi, 'https://$1');
+                      processed = processed.replace(/(?<!https?:\/\/)(linkedin\.com\/in\/[a-zA-Z0-9_-]+)/gi, 'https://$1');
+                      return processed;
+                    }
+                    return line;
+                  }).join('\n');
+
+                  const gmailUrl = `https://mail.google.com/mail/u/0/?fs=1&tf=cm&to=${encodeURIComponent(result.toEmail || '')}&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(plainTextBody)}`;
                   
                   return (
                     <motion.div
@@ -393,9 +576,9 @@ export const ColdEmailGenerator: React.FC = () => {
                               <span>Open in Gmail</span>
                             </a>
 
-                            {/* Copy Stack Button */}
+                            {/* Copy Pitch Button */}
                             <button
-                              onClick={() => handleCopy(result.company, result.email)}
+                              onClick={() => handleCopy(result.company, subject, body)}
                               className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[9px] uppercase font-bold tracking-wider transition-all duration-300 border cursor-pointer shadow-sm ${
                                 isCopied 
                                   ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
@@ -423,14 +606,45 @@ export const ColdEmailGenerator: React.FC = () => {
                         </div>
 
                         {/* Generated Email Content View */}
-                        <div className="flex flex-col gap-1.5">
-                          <label className="text-[8px] uppercase tracking-[0.2em] font-bold text-[#1A1817]/40">
-                            Synthesized Job Application Pitch
-                          </label>
-                          <div className="p-5 rounded-2xl bg-[#1A1817]/[0.01] border border-[#1A1817]/[0.05] relative group/code">
-                            <pre className="text-[12px] text-[#1A1817]/85 font-mono leading-relaxed whitespace-pre-wrap font-sans break-words select-text">
-                              {result.email}
-                            </pre>
+                        <div className="space-y-4">
+                          {/* Subject line */}
+                          <div className="flex flex-col gap-1.5">
+                            <div className="flex items-center justify-between">
+                              <label className="text-[8px] uppercase tracking-[0.2em] font-bold text-[#1A1817]/40">
+                                Email Subject
+                              </label>
+                            </div>
+                            <div className="flex items-center justify-between p-4 rounded-xl bg-[#1A1817]/[0.01] border border-[#1A1817]/[0.05]">
+                              <span className="text-[12px] font-mono font-medium text-[#1A1817]/85 select-text">
+                                {subject}
+                              </span>
+                              <button
+                                onClick={() => handleCopySubject(result.company, subject)}
+                                className="p-1.5 rounded-lg hover:bg-[#1A1817]/5 text-[#1A1817]/45 hover:text-[#1A1817] transition-all cursor-pointer flex items-center gap-1 text-[10px]"
+                                title="Copy Subject Only"
+                              >
+                                {copiedSubjectStates[result.company] ? (
+                                  <>
+                                    <PiCheckLight className="text-xs text-emerald-600" />
+                                    <span className="text-[9px] uppercase tracking-wider font-bold text-emerald-600">Copied</span>
+                                  </>
+                                ) : (
+                                  <PiCopyLight className="text-sm" />
+                                )}
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Email Body */}
+                          <div className="flex flex-col gap-1.5">
+                            <label className="text-[8px] uppercase tracking-[0.2em] font-bold text-[#1A1817]/40">
+                              Email Body Preview (Pasted with rich links)
+                            </label>
+                            <div className="p-5 rounded-2xl bg-[#1A1817]/[0.01] border border-[#1A1817]/[0.05] relative group/code">
+                              <div className="text-[12px] text-[#1A1817]/85 font-sans leading-relaxed whitespace-pre-wrap select-text">
+                                {renderBodyWithLinks(body)}
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
