@@ -10,7 +10,9 @@ import {
   PiCopyrightLight,
   PiPaperPlaneTiltLight,
   PiChatCircleLight,
-  PiEnvelopeSimpleLight
+  PiEnvelopeSimpleLight,
+  PiGithubLogoLight,
+  PiLinkedinLogoLight
 } from 'react-icons/pi';
 
 interface Session {
@@ -350,6 +352,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
             </div>
           </div>
         </button>
+
+        {/* Social Links */}
+        <div className="flex items-center justify-center gap-4 text-[9px] uppercase tracking-wider font-bold text-[#1A1817]/40 transition-colors pt-2 select-text">
+          <a
+            href="https://github.com/TheYuvrajMishra"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 hover:text-[#1A1817] transition-colors"
+          >
+            <PiGithubLogoLight className="text-xs" />
+            <span>GitHub</span>
+          </a>
+          <span className="w-1 h-1 rounded-full bg-[#1A1817]/10" />
+          <a
+            href="https://linkedin.com/in/the-yuvraj-mishra"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1 hover:text-[#1A1817] transition-colors"
+          >
+            <PiLinkedinLogoLight className="text-xs" />
+            <span>LinkedIn</span>
+          </a>
+        </div>
       </div>
     </div>
   );
