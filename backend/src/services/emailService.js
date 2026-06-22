@@ -172,7 +172,7 @@ RULES:
 - Subject formula: "[specific action] + [implied stakes]" — e.g. "shipped X at 19", "noticed Y in your stack", "built this, might be relevant"
 - BANNED: "caught my attention", "we're both dealing with", "I saw that"
 - Start EXACTLY with: Hello Team,
-- End EXACTLY with: Regards,\nYuvraj
+- End EXACTLY with: Regards,\nYuvraj \nGitHub: github.com/TheYuvrajMishra | LinkedIn: linkedin.com/in/the-yuvraj-mishra
 - BANNED CTA phrases: "to see if there might be a fit", "learn more about your engineering roadmap", "given the overlap in our interests", "robust and scalable", "make a real impact", "what struck me","intrigued me", "caught my attention", "piqued my interest"
 - CTA must be ONE short sentence. Max 10 words. Examples: "Quick 10-min chat this week?", "Worth a quick call?"
 - If the company is not a strong technical fit, keep the email SHORT and curiosity-led — do not pad with forced relevance
@@ -194,7 +194,8 @@ Hello Team,
 [body]
 
 Regards,
-Yuvraj`;
+Yuvraj
+GitHub: github.com/TheYuvrajMishra | LinkedIn: linkedin.com/in/the-yuvraj-mishra`;
 
     try {
       const modelId = await llmService.getModelId();
