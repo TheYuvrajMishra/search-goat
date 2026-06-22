@@ -4,8 +4,8 @@ Use this file to describe your professional background, resume details, target r
 ## 1. Candidate Profile & Target Roles
 - **Name**: Yuvraj Mishra
 - **Target Role(s)**: Full-Stack Engineer, Frontend Engineer, Software Developer
-- **Years of Experience**: 2+ years of software development experience
-- **Location**: Mumbai, India
+- **Years of Experience**: 4+ years of software development experience
+- **Location**: kolkata, India
 - **LinkedIn**: linkedin.com/in/the-yuvraj-mishra
 - **GitHub**: github.com/TheYuvrajMishra
 
@@ -17,7 +17,7 @@ Use this file to describe your professional background, resume details, target r
 ## 3. Experience & Key Achievements
 - **Co-founder & CTO — Foontro** (foontro.com): Built a live freelance marketplace from scratch using Next.js, Node.js, MongoDB, and Tailwind CSS. Shipped the full product independently — frontend, backend, payments (Razorpay), and deployment.
 - **Full-Stack Developer — NXT Worldwide** (Netherlands-based startup): Shipped panel.nxtworldwide.com and nxtworldwide.com end-to-end. Owned the full dev cycle across both consumer and internal tooling surfaces.
-- **AI Integrations**: Built LinkAI — an AI-powered LinkedIn comment Chrome extension. Integrated OpenAI-compatible LLM endpoints for real-time content generation.
+- **AI Integrations**: Built Linkedin-comment-ai — an AI-powered LinkedIn comment Chrome extension. Integrated OpenAI-compatible LLM endpoints for real-time content generation.
 - **UI/UX**: Strong design identity across all projects — Linear.app-style interfaces, Framer Motion animations, Tailwind component systems built from scratch.
 
 ## 4. Cold Outreach Pitch & CTA
