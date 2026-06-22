@@ -172,6 +172,9 @@ RULES:
 - BANNED: "caught my attention", "we're both dealing with", "I saw that"
 - Start EXACTLY with: Hello Team,
 - End EXACTLY with: Regards,\nYuvraj
+- BANNED CTA phrases: "to see if there might be a fit", "learn more about your engineering roadmap", "given the overlap in our interests", "robust and scalable", "make a real impact", "what struck me","intrigued me", "caught my attention", "piqued my interest"
+- CTA must be ONE short sentence. Max 10 words. Examples: "Quick 10-min chat this week?", "Worth a quick call?"
+- If the company is not a strong technical fit, keep the email SHORT and curiosity-led — do not pad with forced relevance
 - Under 250 words total (body only dividing in 3 paragraphs, not counting subject or sign-off)
 - Voice: confident, casual, builder-first — use terms like "shipped", "built from scratch", "obsessed with", "moving fast", "would love to contribute"
 - ONE specific callout to what ${companyName} actually does — show you did the homework
