@@ -25,7 +25,7 @@ class EmailService {
       const defaultContent = `# Candidate Job Hunt & Outreach Context
 
 ## 1. Candidate Profile & Target Roles
-- **Name**: Anubhav Mishra
+- **Name**: Yuvraj
 - **Target Role(s)**: Full-Stack Engineer, Frontend Engineer, Software Developer
 - **Years of Experience**: 2+ years of software development experience
 
