@@ -130,6 +130,21 @@ export const ColdEmailGenerator: React.FC = () => {
     }, 2000);
   };
 
+  // Helper to parse subject and body from the generated email string
+  const parseEmail = (emailStr: string) => {
+    let subject = 'Inquiry – Full Stack Developer Opportunity';
+    let body = emailStr;
+    
+    if (emailStr.startsWith('Subject:')) {
+      const lines = emailStr.split('\n');
+      const subjectLine = lines[0];
+      subject = subjectLine.replace(/^Subject:\s*/i, '').trim();
+      body = lines.slice(1).join('\n').trim();
+    }
+    
+    return { subject, body };
+  };
+
   // Stagger reveal animations for generated results
   const listContainerVariants = {
     hidden: { opacity: 0 },
@@ -341,6 +356,8 @@ export const ColdEmailGenerator: React.FC = () => {
               <div className="space-y-8">
                 {results.map((result) => {
                   const isCopied = copiedStates[result.company] || false;
+                  const { subject, body } = parseEmail(result.email);
+                  const gmailUrl = `https://mail.google.com/mail/u/0/?fs=1&tf=cm&su=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                   
                   return (
                     <motion.div
@@ -363,27 +380,41 @@ export const ColdEmailGenerator: React.FC = () => {
                             </div>
                           </div>
 
-                          {/* Copy Stack Button */}
-                          <button
-                            onClick={() => handleCopy(result.company, result.email)}
-                            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[9px] uppercase font-bold tracking-wider transition-all duration-300 border cursor-pointer ${
-                              isCopied 
-                                ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
-                                : 'bg-[#1A1817]/[0.02] border-[#1A1817]/[0.06] text-[#1A1817]/60 hover:bg-[#1A1817]/5 hover:text-[#1A1817]'
-                            }`}
-                          >
-                            {isCopied ? (
-                              <>
-                                <PiCheckLight className="text-xs" />
-                                <span>Copied Pitch!</span>
-                              </>
-                            ) : (
-                              <>
-                                <PiCopyLight className="text-xs" />
-                                <span>Copy Pitch</span>
-                              </>
-                            )}
-                          </button>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            {/* Open in Gmail Button */}
+                            <a
+                              href={gmailUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[9px] uppercase font-bold tracking-wider transition-all duration-300 border bg-rose-50 border-rose-200/50 hover:bg-rose-100/70 text-rose-800 cursor-pointer shadow-sm"
+                              title="Open and Draft in Gmail"
+                            >
+                              <PiEnvelopeSimpleLight className="text-xs text-rose-600" />
+                              <span>Open in Gmail</span>
+                            </a>
+
+                            {/* Copy Stack Button */}
+                            <button
+                              onClick={() => handleCopy(result.company, result.email)}
+                              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-[9px] uppercase font-bold tracking-wider transition-all duration-300 border cursor-pointer shadow-sm ${
+                                isCopied 
+                                  ? 'bg-emerald-50 border-emerald-200 text-emerald-800' 
+                                  : 'bg-[#1A1817]/[0.02] border-[#1A1817]/[0.06] text-[#1A1817]/60 hover:bg-[#1A1817]/5 hover:text-[#1A1817]'
+                              }`}
+                            >
+                              {isCopied ? (
+                                <>
+                                  <PiCheckLight className="text-xs" />
+                                  <span>Copied Pitch!</span>
+                                </>
+                              ) : (
+                                <>
+                                  <PiCopyLight className="text-xs" />
+                                  <span>Copy Pitch</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
                         </div>
 
                         {/* Company Profile Scraped Bezel */}

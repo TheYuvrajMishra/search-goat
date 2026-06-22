@@ -165,6 +165,7 @@ What they do: ${companyPurpose}
 RULES:
 - Subject must be a HOOK — a specific observation, question, or provocative claim. NEVER a job title. Examples: "built a marketplace at 19 — want to chat?", "saw what Kavia is doing with codebases", "shipped this, think it maps to your stack"
 - The company callout must include a TECHNICAL or PRODUCT-SPECIFIC detail from their profile — not just their name
+- Whenever using CompanyName, use only name not the full legal entity (e.g., "Kavia" not "Kavia Inc.")
 - BANNED phrases (add to existing list): "I'd love to discuss", "contribute to your mission", "my experience can", "resonates with me"
 - After the company callout, immediately pivot to ONE concrete technical match — e.g. "we're both dealing with [X problem], I solved it with [Y]"
 - The technical bridge MUST be honest — only draw a parallel if Yuvraj's work genuinely maps to the company's problem. If it doesn't map cleanly, lead with curiosity about their stack instead, not a forced analogy.
@@ -183,7 +184,8 @@ RULES:
 - NO filler phrases: "I came across", "I would love the opportunity", "I am writing to", "I hope this finds you well"
 - NO bullet points in the email body
 - NO corporate tone whatsoever
-
+- NO generic compliments about the company or its mission
+- No "—" anywhere in the response, only use commas or periods
 FORMAT (return ONLY this, nothing else):
 Subject: [subject]
 
